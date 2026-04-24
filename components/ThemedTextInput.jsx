@@ -12,6 +12,7 @@ export default function ThemedTextInput({ style, ...props }) {
           borderRadius: 16, // Smoother rounding
           borderWidth: 1,
           borderColor: Colors.border.subtle,
+          fontSize: 16, // CRITICAL: Prevents iOS Safari from zooming in on Web App
         },
         style
       ]}
