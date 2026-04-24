@@ -122,6 +122,7 @@ export default function MentalMath() {
     try {
       await addDoc(collection(db, "scores"), {
         userId: user.uid,
+        userName: user.displayName || user.email.split('@')[0],
         gameType: "Mental Math",
         score: finalScore,
         createdAt: serverTimestamp()

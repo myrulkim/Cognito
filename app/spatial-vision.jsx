@@ -115,6 +115,7 @@ export default function SpatialVision() {
     try {
       await addDoc(collection(db, "scores"), {
         userId: user.uid,
+        userName: user.displayName || user.email.split('@')[0],
         gameType: "Spatial Vision",
         score: finalScore,
         createdAt: serverTimestamp()

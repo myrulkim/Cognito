@@ -35,6 +35,7 @@ export default function RapidFire() {
     try {
       await addDoc(collection(db, "scores"), {
         userId: user.uid,
+        userName: user.displayName || user.email.split('@')[0],
         gameType: "Rapid Fire",
         score: finalScore, // Lower is better for reaction time
         createdAt: serverTimestamp()

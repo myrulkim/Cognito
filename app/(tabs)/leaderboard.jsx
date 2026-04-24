@@ -91,7 +91,7 @@ export default function LeaderboardScreen() {
                   </View>
                   <View style={{ marginLeft: 12 }}>
                     <ThemedText style={[styles.name, isCurrentUser && { color: Colors.accent.primaryLight }]}>
-                        {isCurrentUser ? "You" : `Explorer_${item.userId.substring(0, 4)}`}
+                        {isCurrentUser ? "You" : (item.userName || `Explorer_${item.userId.substring(0, 4)}`)}
                     </ThemedText>
                     <ThemedText style={[styles.gameType, { color: isTop3 ? rankStyle.color : Colors.text.secondary }]}>{item.gameType}</ThemedText>
                   </View>

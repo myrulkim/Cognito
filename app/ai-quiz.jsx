@@ -112,6 +112,7 @@ export default function AIQuizScreen() {
         try {
             await addDoc(collection(db, "scores"), {
                 userId: user.uid,
+                userName: user.displayName || user.email.split('@')[0],
                 gameType: "Academic Quiz",
                 score: score + (checkIsMatch(selectedOption, questions[currentIndex].answer) ? 20 : 0), // Include last score if correct
                 subject: subject,

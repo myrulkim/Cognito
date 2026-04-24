@@ -110,6 +110,7 @@ export default function MemoryFlip() {
     try {
         await addDoc(collection(db, "scores"), {
             userId: user.uid,
+            userName: user.displayName || user.email.split('@')[0],
             gameType: "Memory Flip",
             score: finalScore,
             createdAt: serverTimestamp()
