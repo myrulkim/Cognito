@@ -21,13 +21,13 @@ function AuthGuard({ children }) {
   useEffect(() => {
     if (loading) return;
 
-    const inAuthGroup = segments[0] === '(tabs)';
+    const inAuthScreen = segments[0] === 'login' || segments[0] === 'register';
 
-    if (!user && inAuthGroup) {
-      // If not logged in and trying to access tabs, go to login
+    if (!user && !inAuthScreen) {
+      // If not logged in and NOT on an auth screen, force login
       router.replace('/login');
-    } else if (user && !inAuthGroup) {
-      // If logged in and trying to access auth screens, go to tabs
+    } else if (user && inAuthScreen) {
+      // If logged in and ON an auth screen, go to home
       router.replace('/(tabs)');
     }
   }, [user, loading, segments]);
