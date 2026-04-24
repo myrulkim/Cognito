@@ -177,7 +177,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { padding: 20 },
-  header: { marginBottom: 35 },
+  header: { marginBottom: 35, paddingTop: 10 },
   titleText: { fontSize: 40, color: Colors.text.primary, letterSpacing: -1.5 },
   bugBtn: { padding: 8, backgroundColor: Colors.bg.elevated, borderRadius: 12, borderWidth: 1, borderColor: Colors.border.subtle },
   subtitle: { color: Colors.text.secondary, fontSize: 13, fontWeight: '700', letterSpacing: 0.5, marginTop: 4 },

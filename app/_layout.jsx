@@ -64,6 +64,8 @@ function RootLayoutNav({ themeKey }) {
   );
 }
 
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
 export default function RootLayout() {
   const [themeKey, setThemeKey] = useState(0);
 
@@ -89,11 +91,13 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider key={`auth-${themeKey}`}>
-      <AuthGuard>
-        <StatusBar style={Colors.statusBarStyle || 'light'} />
-        <RootLayoutNav themeKey={themeKey} />
-      </AuthGuard>
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider key={`auth-${themeKey}`}>
+        <AuthGuard>
+          <StatusBar style="light" />
+          <RootLayoutNav themeKey={themeKey} />
+        </AuthGuard>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
