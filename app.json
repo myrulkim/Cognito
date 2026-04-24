@@ -29,6 +29,9 @@
       }
     },
     "scheme": "cognito",
-    "plugins": ["expo-router"]
+    "plugins": [
+      "expo-router",
+      "expo-font"
+    ]
   }
 }

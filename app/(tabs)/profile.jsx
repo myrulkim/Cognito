@@ -194,7 +194,7 @@ export default function ProfileScreen() {
                         strokeDashoffset={283 - (283 * ((profileData.iq - 70) / 100))} 
                         fill="none" strokeLinecap="round" 
                     />
-                    <SvgText x="50" y="55" fontSize="22" fontFamily="GoogleSans-Black" fill={Colors.text.primary} textAnchor="middle">{profileData.iq}</SvgText>
+                    <SvgText x="50" y="55" fontSize="22" fontFamily="Roboto-Black" fill={Colors.text.primary} textAnchor="middle">{profileData.iq}</SvgText>
                     <SvgText x="50" y="68" fontSize="6" fontWeight="bold" fill={Colors.text.secondary} textAnchor="middle">{profileData.rankLabel}</SvgText>
                 </Svg>
                 <View style={[StyleSheet.absoluteFillObject, styles.glowBehindGauge]} />

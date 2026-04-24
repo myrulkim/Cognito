@@ -4,9 +4,9 @@ import { Colors } from '../constants/Colors'
 const ThemedText = ({ style, title = false, subtitle = false, ...props }) => {
 
   const getFontFamily = () => {
-    if (title) return 'GoogleSans-Black'
-    if (subtitle) return 'GoogleSans-Bold'
-    return 'GoogleSans-Regular'
+    if (title) return 'Roboto-Black'
+    if (subtitle) return 'Roboto-Bold'
+    return 'Roboto-Regular'
   }
 
   // Use the new Obsidian Neural design system colors
