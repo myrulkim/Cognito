@@ -11,7 +11,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { db } from '../../src/config/firebase';
 import { collection, query, where, getDocs, limit, orderBy } from 'firebase/firestore';
 import { getBrainFuelAdvice } from '../../src/services/groq';
-import { Audio } from 'expo-av';
 import { Coffee, Music, Volume2, VolumeX, RefreshCw } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
@@ -37,62 +36,84 @@ const BrainFuelCard = ({ advice, onRefresh, loading }) => {
 
 const FocusMusicFAB = () => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [sound, setSound] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
+  const [activeTrack, setActiveTrack] = useState(null);
+  const audioRef = useRef(null);
 
   const ambientSounds = [
-    { id: 'rain', name: 'Rain Loop', url: 'https://actions.google.com/sounds/v1/water/rain_on_roof.ogg' },
-    { id: 'waves', name: 'Ocean Waves', url: 'https://actions.google.com/sounds/v1/water/waves_crashing_on_shore.ogg' },
-    { id: 'forest', name: 'Deep Forest', url: 'https://actions.google.com/sounds/v1/ambiences/morning_forest.ogg' },
+    { id: 'rain', name: '🌧️ Rain', url: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3' },
+    { id: 'waves', name: '🌊 Ocean', url: 'https://cdn.pixabay.com/download/audio/2021/08/09/audio_dc39bdc867.mp3' },
+    { id: 'forest', name: '🌲 Forest', url: 'https://cdn.pixabay.com/download/audio/2021/09/06/audio_b519c76049.mp3' },
   ];
 
-  async function playSound(url) {
-    if (sound) {
-      await sound.unloadAsync();
+  function playTrack(track) {
+    // Stop existing audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
     }
-    const { sound: newSound } = await Audio.Sound.createAsync(
-      { uri: url },
-      { shouldPlay: true, isLooping: true, volume: 0.5 }
-    );
-    setSound(newSound);
-    setIsPlaying(true);
-    setShowMenu(false);
+    // Use Web Audio API (works on all browsers & PWA)
+    if (typeof Audio !== 'undefined') {
+      const audio = new Audio(track.url);
+      audio.loop = true;
+      audio.volume = 0.4;
+      audio.play().catch(e => console.warn('Audio play failed:', e));
+      audioRef.current = audio;
+      setActiveTrack(track.id);
+      setIsPlaying(true);
+      setShowMenu(false);
+    }
   }
 
-  async function togglePlay() {
-    if (sound) {
-      if (isPlaying) {
-        await sound.pauseAsync();
-      } else {
-        await sound.playAsync();
-      }
-      setIsPlaying(!isPlaying);
+  function togglePlay() {
+    if (isPlaying && audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else if (!isPlaying && audioRef.current) {
+      audioRef.current.play();
+      setIsPlaying(true);
     } else {
-      setShowMenu(true);
+      setShowMenu(prev => !prev);
     }
   }
 
   useEffect(() => {
-    return sound ? () => { sound.unloadAsync(); } : undefined;
-  }, [sound]);
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   return (
     <View style={styles.fabContainer}>
       {showMenu && (
         <View style={styles.musicMenu}>
+          <ThemedText style={styles.menuHeader}>FOCUS SOUNDS</ThemedText>
           {ambientSounds.map(s => (
-            <TouchableOpacity key={s.id} style={styles.menuItem} onPress={() => playSound(s.url)}>
-              <ThemedText style={styles.menuText}>{s.name}</ThemedText>
+            <TouchableOpacity
+              key={s.id}
+              style={[styles.menuItem, activeTrack === s.id && isPlaying && styles.menuItemActive]}
+              onPress={() => playTrack(s)}
+            >
+              <ThemedText style={[styles.menuText, activeTrack === s.id && isPlaying && { color: Colors.accent.primaryLight }]}>
+                {s.name}
+              </ThemedText>
             </TouchableOpacity>
           ))}
+          {isPlaying && (
+            <TouchableOpacity style={styles.menuItemStop} onPress={() => { audioRef.current?.pause(); setIsPlaying(false); setActiveTrack(null); setShowMenu(false); }}>
+              <ThemedText style={{ fontSize: 11, color: Colors.accent.danger, fontWeight: 'bold' }}>⏹ Stop</ThemedText>
+            </TouchableOpacity>
+          )}
         </View>
       )}
-      <TouchableOpacity 
-        style={[styles.fab, isPlaying && { backgroundColor: Colors.accent.primary }]} 
+      <TouchableOpacity
+        style={[styles.fab, isPlaying && { backgroundColor: Colors.accent.primary, shadowColor: Colors.accent.primary, shadowOpacity: 0.5, shadowRadius: 15, elevation: 15 }]}
         onPress={togglePlay}
-        onLongPress={() => setShowMenu(!showMenu)}
       >
-        {isPlaying ? <Volume2 size={24} color="#FFF" /> : <Music size={24} color="#FFF" />}
+        {isPlaying ? <Volume2 size={22} color="#FFF" /> : <Music size={22} color="#FFF" />}
       </TouchableOpacity>
     </View>
   );
@@ -299,9 +320,12 @@ const styles = StyleSheet.create({
 
   fabContainer: { position: 'absolute', bottom: 100, right: 20, alignItems: 'flex-end' },
   fab: { width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.bg.elevated, justifyContent: 'center', alignItems: 'center', elevation: 10, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  musicMenu: { backgroundColor: Colors.bg.card, borderRadius: 20, padding: 8, marginBottom: 12, borderWidth: 1, borderColor: Colors.border.subtle, width: 120 },
-  menuItem: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 12 },
-  menuText: { fontSize: 12, fontWeight: 'bold', color: Colors.text.primary },
+  musicMenu: { backgroundColor: Colors.bg.card, borderRadius: 20, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: Colors.border.subtle, width: 140 },
+  menuHeader: { fontSize: 9, fontWeight: '900', color: Colors.text.secondary, letterSpacing: 1.5, paddingHorizontal: 12, paddingVertical: 6 },
+  menuItem: { paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12 },
+  menuItemActive: { backgroundColor: 'rgba(124, 58, 237, 0.1)' },
+  menuItemStop: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 12, marginTop: 4, borderTopWidth: 1, borderTopColor: Colors.border.subtle, alignItems: 'center' },
+  menuText: { fontSize: 13, fontWeight: '600', color: Colors.text.primary },
 
   sectionHeading: { fontSize: 11, fontWeight: '900', color: Colors.text.secondary, letterSpacing: 3, marginBottom: 20, marginLeft: 5, opacity: 0.6 },
   
