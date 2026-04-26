@@ -3,6 +3,12 @@ import { StyleSheet, Platform, useColorScheme, View } from 'react-native';
 import { Home, BarChart2, Trophy, User } from 'lucide-react-native';
 import { Colors } from '../../constants/Colors';
 
+const GlowIcon = ({ children, focused, color }) => (
+  <View style={focused ? [styles.iconGlow, { shadowColor: color }] : null}>
+    {children}
+  </View>
+);
+
 export default function TabLayout() {
   return (
     <Tabs
@@ -27,7 +33,9 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <Home size={24} color={color} strokeWidth={focused ? 2.5 : 2} />
+            <GlowIcon focused={focused} color={color}>
+              <Home size={24} color={color} strokeWidth={focused ? 2.5 : 2} />
+            </GlowIcon>
           ),
         }}
       />
@@ -36,7 +44,9 @@ export default function TabLayout() {
         options={{
           title: 'Stats',
           tabBarIcon: ({ color, focused }) => (
-            <BarChart2 size={24} color={color} strokeWidth={focused ? 2.5 : 2} />
+            <GlowIcon focused={focused} color={color}>
+              <BarChart2 size={24} color={color} strokeWidth={focused ? 2.5 : 2} />
+            </GlowIcon>
           ),
         }}
       />
@@ -45,7 +55,9 @@ export default function TabLayout() {
         options={{
           title: 'Rank',
           tabBarIcon: ({ color, focused }) => (
-            <Trophy size={24} color={color} strokeWidth={focused ? 2.5 : 2} />
+            <GlowIcon focused={focused} color={color}>
+              <Trophy size={24} color={color} strokeWidth={focused ? 2.5 : 2} />
+            </GlowIcon>
           ),
         }}
       />
@@ -54,7 +66,9 @@ export default function TabLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ color, focused }) => (
-            <User size={24} color={color} strokeWidth={focused ? 2.5 : 2} />
+            <GlowIcon focused={focused} color={color}>
+              <User size={24} color={color} strokeWidth={focused ? 2.5 : 2} />
+            </GlowIcon>
           ),
         }}
       />
@@ -87,7 +101,13 @@ const styles = StyleSheet.create({
   },
   tabBarLabel: {
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '800',
     marginTop: 4,
+  },
+  iconGlow: {
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+    elevation: 10,
   }
 });

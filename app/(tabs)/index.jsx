@@ -40,22 +40,23 @@ const FloatingCard = ({ item, onPress, type = 'large' }) => {
             styles.card, 
             type === 'mini' && styles.miniCard, 
             item.locked && styles.lockedCard,
-            item.glow && !item.locked && { shadowColor: item.glow, shadowOpacity: 0.15, shadowRadius: 20, shadowOffset: { width: 0, height: 10 } }
+            item.glow && !item.locked && { shadowColor: item.glow, shadowOpacity: 0.1, shadowRadius: 15 }
         ]}
       >
         <View style={styles.cardHeader}>
-             <View style={[styles.diffBadge, { backgroundColor: item.locked ? Colors.border.subtle : `${item.color}20` }]}>
+             <View style={[styles.diffBadge, { backgroundColor: item.locked ? 'rgba(255,255,255,0.05)' : `${item.color}15` }]}>
+                <View style={[styles.dot, { backgroundColor: item.locked ? Colors.text.secondary : item.color }]} />
                 <ThemedText style={[styles.diffText, { color: item.locked ? Colors.text.secondary : item.color }]}>{item.difficulty}</ThemedText>
              </View>
-             {item.locked && <Lock size={14} color={Colors.text.secondary} />}
+             {item.locked && <Lock size={12} color={Colors.text.secondary} />}
         </View>
         
         <View style={type === 'large' ? styles.cardContent : styles.miniContent}>
-          <View style={[styles.iconBox, { backgroundColor: item.locked ? Colors.border.subtle : `${item.color}15`, marginBottom: type === 'mini' ? 12 : 0, borderColor: item.locked ? 'transparent' : `${item.color}40` }]}>
-              <IconComponent size={type === 'large' ? 28 : 24} color={item.locked ? Colors.text.secondary : item.color} />
+          <View style={[styles.iconBox, { backgroundColor: item.locked ? 'rgba(255,255,255,0.03)' : `${item.color}10`, marginBottom: type === 'mini' ? 12 : 0, borderColor: item.locked ? 'transparent' : `${item.color}20` }]}>
+              <IconComponent size={type === 'large' ? 26 : 22} color={item.locked ? Colors.text.secondary : item.color} />
           </View>
           <View style={{ flex: 1, alignItems: type === 'mini' ? 'center' : 'flex-start' }}>
-              <ThemedText style={[styles.cardTitle, type === 'mini' && { textAlign: 'center', fontSize: 16 }]}>{item.title}</ThemedText>
+              <ThemedText style={[styles.cardTitle, type === 'mini' && { textAlign: 'center', fontSize: 15 }]}>{item.title}</ThemedText>
               {type === 'large' && <ThemedText style={styles.cardDesc}>{item.locked ? 'Locked' : item.desc}</ThemedText>}
           </View>
         </View>
@@ -177,33 +178,35 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scrollContent: { padding: 20 },
-  header: { marginBottom: 35, paddingTop: 10 },
-  titleText: { fontSize: 40, color: Colors.text.primary, letterSpacing: -1.5 },
+  scrollContent: { padding: 20, paddingTop: 10 },
+  header: { marginBottom: 35, paddingHorizontal: 5 },
+  titleText: { fontSize: 42, color: Colors.text.primary, letterSpacing: -2, fontWeight: '900' },
   bugBtn: { padding: 8, backgroundColor: Colors.bg.elevated, borderRadius: 12, borderWidth: 1, borderColor: Colors.border.subtle },
-  subtitle: { color: Colors.text.secondary, fontSize: 13, fontWeight: '700', letterSpacing: 0.5, marginTop: 4 },
+  subtitle: { color: Colors.text.secondary, fontSize: 13, fontWeight: '700', letterSpacing: 0.5, marginTop: 4, opacity: 0.8 },
   
-  dailyWrapper: { marginBottom: 40, borderRadius: 28, overflow: 'hidden', elevation: 15, shadowColor: Colors.accent.primary, shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.4, shadowRadius: 25 },
+  dailyWrapper: { marginBottom: 40, borderRadius: 32, overflow: 'hidden', elevation: 20, shadowColor: Colors.accent.primary, shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.3, shadowRadius: 20 },
   dailyGradient: { padding: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  badge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, gap: 6, marginBottom: 12, alignSelf: 'flex-start' },
-  badgeText: { fontSize: 10, fontWeight: 'bold', color: '#FFFFFF', letterSpacing: 1 },
-  dailyTitle: { fontSize: 24, fontWeight: 'bold', color: '#FFF' },
-  dailySubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 4 },
-  dailyIconBox: { backgroundColor: 'rgba(255,255,255,0.2)', padding: 16, borderRadius: 24 },
+  badge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.15)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14, gap: 6, marginBottom: 12, alignSelf: 'flex-start' },
+  badgeText: { fontSize: 10, fontWeight: '900', color: '#FFFFFF', letterSpacing: 1.5 },
+  dailyTitle: { fontSize: 26, fontWeight: '900', color: '#FFF', letterSpacing: -0.5 },
+  dailySubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 4, fontWeight: '600' },
+  dailyIconBox: { backgroundColor: 'rgba(255,255,255,0.15)', padding: 18, borderRadius: 24 },
 
-  sectionHeading: { fontSize: 11, fontWeight: '900', color: Colors.text.secondary, letterSpacing: 2, marginBottom: 15, marginLeft: 5 },
+  sectionHeading: { fontSize: 11, fontWeight: '900', color: Colors.text.secondary, letterSpacing: 3, marginBottom: 20, marginLeft: 5, opacity: 0.6 },
   
-  card: { backgroundColor: Colors.bg.card, padding: 20, borderRadius: 24, elevation: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 12, borderWidth: 1, borderColor: Colors.border.subtle },
-  miniCard: { width: '100%', aspectRatio: 1, justifyContent: 'center' },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  diffBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, alignSelf: 'flex-start' },
-  diffText: { fontSize: 9, fontWeight: '900', letterSpacing: 0.5 },
+  card: { backgroundColor: Colors.bg.card, padding: 24, borderRadius: 28, elevation: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.03)' },
+  miniCard: { width: '100%', aspectRatio: 1, justifyContent: 'space-between', padding: 20 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 },
+  diffBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10, gap: 5 },
+  dot: { width: 4, height: 4, borderRadius: 2 },
+  diffText: { fontSize: 8, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase' },
   cardContent: { flexDirection: 'row', alignItems: 'center' },
-  miniContent: { alignItems: 'center' },
-  iconBox: { padding: 14, borderRadius: 16, marginRight: 16, marginBottom: 8, borderWidth: 1 },
-  cardTitle: { fontSize: 18, color: Colors.text.primary, fontWeight: 'bold' },
-  cardDesc: { fontSize: 12, color: Colors.text.secondary, marginTop: 4 },
+  miniContent: { alignItems: 'center', flex: 1, justifyContent: 'center' },
+  iconBox: { padding: 14, borderRadius: 18, marginRight: 18, borderWidth: 1 },
+  cardTitle: { fontSize: 19, color: Colors.text.primary, fontWeight: '800', letterSpacing: -0.2 },
+  cardDesc: { fontSize: 12, color: Colors.text.secondary, marginTop: 4, lineHeight: 18 },
   
-  miniGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
-  lockedCard: { opacity: 0.6 },
+  grid: { gap: 16 },
+  miniGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, justifyContent: 'space-between' },
+  lockedCard: { opacity: 0.5 },
 });
