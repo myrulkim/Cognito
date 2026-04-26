@@ -63,3 +63,34 @@ export const generateAcademicQuiz = async (form, subject, level, retries = 3) =>
     }
   }
 };
+
+export const getBrainFuelAdvice = async (lastScores = []) => {
+  const systemPrompt = `Anda adalah pakar sains neuro dan jurulatih prestasi kognitif. 
+    Tugas anda: Berikan 1 ayat nasihat ringkas (Brain Hack) dalam Bahasa Melayu yang santai tapi profesional. 
+    Nasihat mestilah berasaskan sains, unik, dan mudah diamalkan segera untuk meningkatkan fokus atau kesihatan otak.
+    
+    Konteks: User baru sahaja bermain game kognitif. 
+    Format output MESTI JSON sah: {"advice": "..."}`;
+
+  try {
+    const response = await fetch(GROQ_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${GROQ_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: "llama-3.1-8b-instant",
+        messages: [{ role: "system", content: systemPrompt }],
+        temperature: 0.9,
+        response_format: { type: "json_object" }
+      })
+    });
+
+    const data = await response.json();
+    return JSON.parse(data.choices[0].message.content).advice;
+  } catch (error) {
+    console.error("Groq Brain Fuel Error:", error);
+    return "Minum air kosong 500ml sekarang untuk naikkan fokus otak anda sebanyak 10%!"; // Fallback
+  }
+};

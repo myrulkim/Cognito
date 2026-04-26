@@ -52,6 +52,36 @@ const RadarChart = ({ dataValues }) => {
   );
 };
 
+const IdentityCard = ({ radar }) => {
+  const titles = [
+    { name: 'The Architect', desc: 'Logic & Reasoning specialist. You build mental structures that solve complex problems.', color: Colors.accent.secondary },
+    { name: 'The Vault', desc: 'Visual Memory master. You store details with photographic precision.', color: Colors.accent.danger },
+    { name: 'The Human Calculator', desc: 'Numerical powerhouse. Numbers flow through your mind with ease.', color: '#38BDF8' },
+    { name: 'The Visionary', desc: 'Spatial manipulation expert. You can rotate and mold ideas in 3D.', color: Colors.accent.warn },
+    { name: 'The Sonic Mind', desc: 'Reaction speed legend. Your reflexes outpace the speed of thought.', color: Colors.accent.success },
+  ];
+
+  const maxIndex = radar.indexOf(Math.max(...radar));
+  const identity = titles[maxIndex] || titles[0];
+
+  return (
+    <LinearGradient 
+      colors={[`${identity.color}20`, 'rgba(0,0,0,0)']} 
+      start={{x: 0, y: 0}} end={{x: 1, y: 1}}
+      style={styles.identityCard}
+    >
+      <View style={[styles.identityIcon, { backgroundColor: identity.color }]}>
+        <Zap size={20} color="#FFF" />
+      </View>
+      <View style={{ flex: 1 }}>
+        <ThemedText style={styles.identityLabel}>COGNITIVE IDENTITY</ThemedText>
+        <ThemedText style={[styles.identityTitle, { color: identity.color }]}>{identity.name}</ThemedText>
+        <ThemedText style={styles.identityDesc}>{identity.desc}</ThemedText>
+      </View>
+    </LinearGradient>
+  );
+};
+
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -227,6 +257,9 @@ export default function ProfileScreen() {
             </View>
         </View>
 
+        <ThemedText subtitle style={styles.sectionTitle}>Cognitive Identity</ThemedText>
+        <IdentityCard radar={profileData.radar} />
+
         <ThemedText subtitle style={styles.sectionTitle}>Cognito Analytics</ThemedText>
         <View style={styles.analyticsCard}>
             <View style={{ flex: 1 }}>
@@ -336,6 +369,12 @@ const styles = StyleSheet.create({
   miniStatCard: { flex: 1, backgroundColor: Colors.bg.card, padding: 16, borderRadius: 24, alignItems: 'center', elevation: 8, shadowColor: Colors.accent.primary, shadowOpacity: 0.1, shadowRadius: 15, borderWidth: 1, borderColor: Colors.border.subtle },
   miniStatValue: { fontSize: 24, fontWeight: '900', color: Colors.text.primary },
   miniStatLabel: { fontSize: 11, color: Colors.text.secondary, fontWeight: 'bold', marginTop: 4 },
+
+  identityCard: { padding: 24, borderRadius: 32, flexDirection: 'row', alignItems: 'center', marginBottom: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
+  identityIcon: { width: 44, height: 44, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginRight: 20, elevation: 10, shadowOpacity: 0.5, shadowRadius: 10 },
+  identityLabel: { fontSize: 10, fontWeight: '900', color: Colors.text.secondary, letterSpacing: 2, marginBottom: 4 },
+  identityTitle: { fontSize: 22, fontWeight: '900', letterSpacing: -0.5, marginBottom: 4 },
+  identityDesc: { fontSize: 12, color: Colors.text.secondary, lineHeight: 18 },
 
   sectionTitle: { fontSize: 18, color: Colors.text.primary, marginBottom: 15, marginTop: 10 },
   analyticsCard: { backgroundColor: Colors.bg.card, borderRadius: 32, padding: 20, flexDirection: 'row', alignItems: 'center', elevation: 8, shadowColor: Colors.accent.primary, shadowOpacity: 0.1, shadowRadius: 15, borderWidth: 1, borderColor: Colors.border.subtle },

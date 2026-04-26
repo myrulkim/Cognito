@@ -9,9 +9,94 @@ import { Colors } from '../../constants/Colors';
 import ThemedView from '../../components/ThemedView';
 import { useAuth } from '../../contexts/AuthContext';
 import { db } from '../../src/config/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit, orderBy } from 'firebase/firestore';
+import { getBrainFuelAdvice } from '../../src/services/groq';
+import { Audio } from 'expo-av';
+import { Coffee, Music, Volume2, VolumeX, RefreshCw } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
+
+const BrainFuelCard = ({ advice, onRefresh, loading }) => {
+  return (
+    <View style={styles.fuelCard}>
+      <View style={styles.fuelHeader}>
+        <View style={styles.fuelTitleRow}>
+          <Coffee size={14} color={Colors.accent.primaryLight} />
+          <ThemedText style={styles.fuelTitle}>DAILY BRAIN FUEL</ThemedText>
+        </View>
+        <TouchableOpacity onPress={onRefresh} disabled={loading}>
+          <RefreshCw size={14} color={Colors.text.secondary} />
+        </TouchableOpacity>
+      </View>
+      <ThemedText style={styles.fuelAdvice}>
+        {loading ? "Menyediakan nutrisi otak..." : advice}
+      </ThemedText>
+    </View>
+  );
+};
+
+const FocusMusicFAB = () => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [sound, setSound] = useState(null);
+  const [showMenu, setShowMenu] = useState(false);
+
+  const ambientSounds = [
+    { id: 'rain', name: 'Rain Loop', url: 'https://actions.google.com/sounds/v1/water/rain_on_roof.ogg' },
+    { id: 'waves', name: 'Ocean Waves', url: 'https://actions.google.com/sounds/v1/water/waves_crashing_on_shore.ogg' },
+    { id: 'forest', name: 'Deep Forest', url: 'https://actions.google.com/sounds/v1/ambiences/morning_forest.ogg' },
+  ];
+
+  async function playSound(url) {
+    if (sound) {
+      await sound.unloadAsync();
+    }
+    const { sound: newSound } = await Audio.Sound.createAsync(
+      { uri: url },
+      { shouldPlay: true, isLooping: true, volume: 0.5 }
+    );
+    setSound(newSound);
+    setIsPlaying(true);
+    setShowMenu(false);
+  }
+
+  async function togglePlay() {
+    if (sound) {
+      if (isPlaying) {
+        await sound.pauseAsync();
+      } else {
+        await sound.playAsync();
+      }
+      setIsPlaying(!isPlaying);
+    } else {
+      setShowMenu(true);
+    }
+  }
+
+  useEffect(() => {
+    return sound ? () => { sound.unloadAsync(); } : undefined;
+  }, [sound]);
+
+  return (
+    <View style={styles.fabContainer}>
+      {showMenu && (
+        <View style={styles.musicMenu}>
+          {ambientSounds.map(s => (
+            <TouchableOpacity key={s.id} style={styles.menuItem} onPress={() => playSound(s.url)}>
+              <ThemedText style={styles.menuText}>{s.name}</ThemedText>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+      <TouchableOpacity 
+        style={[styles.fab, isPlaying && { backgroundColor: Colors.accent.primary }]} 
+        onPress={togglePlay}
+        onLongPress={() => setShowMenu(!showMenu)}
+      >
+        {isPlaying ? <Volume2 size={24} color="#FFF" /> : <Music size={24} color="#FFF" />}
+      </TouchableOpacity>
+    </View>
+  );
+};
 
 const CORE_GAMES = [
   { id: 'logic', title: 'Logic Test', desc: 'Deductive IQ Test.', icon: Brain, color: Colors.accent.secondary, route: '/logic-test', difficulty: 'HARD', locked: false, glow: Colors.accent.secondary },
@@ -68,13 +153,23 @@ const FloatingCard = ({ item, onPress, type = 'large' }) => {
 export default function HomeScreen() {
   const { user } = useAuth();
   const [dailyPoints, setDailyPoints] = useState(0);
+  const [advice, setAdvice] = useState("");
+  const [adviceLoading, setAdviceLoading] = useState(false);
   const TARGET_POINTS = 1200;
 
   useEffect(() => {
     if (user) {
         fetchDailyPoints();
+        fetchAdvice();
     }
   }, [user]);
+
+  const fetchAdvice = async () => {
+    setAdviceLoading(true);
+    const newAdvice = await getBrainFuelAdvice();
+    setAdvice(newAdvice);
+    setAdviceLoading(false);
+  };
 
   const fetchDailyPoints = async () => {
     try {
@@ -156,6 +251,8 @@ export default function HomeScreen() {
           </LinearGradient>
         </TouchableOpacity>
 
+        <BrainFuelCard advice={advice} onRefresh={fetchAdvice} loading={adviceLoading} />
+
         <ThemedText style={styles.sectionHeading}>COGNITIVE CORE</ThemedText>
         <View style={styles.grid}>
           {CORE_GAMES.map(game => (
@@ -170,8 +267,10 @@ export default function HomeScreen() {
           ))}
         </View>
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: 120 }} />
       </ScrollView>
+      
+      <FocusMusicFAB />
     </ThemedView>
   );
 }
@@ -191,6 +290,18 @@ const styles = StyleSheet.create({
   dailyTitle: { fontSize: 26, fontWeight: '900', color: '#FFF', letterSpacing: -0.5 },
   dailySubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 4, fontWeight: '600' },
   dailyIconBox: { backgroundColor: 'rgba(255,255,255,0.15)', padding: 18, borderRadius: 24 },
+
+  fuelCard: { backgroundColor: 'rgba(124, 58, 237, 0.05)', padding: 16, borderRadius: 24, marginBottom: 35, borderWidth: 1, borderColor: 'rgba(124, 58, 237, 0.1)' },
+  fuelHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  fuelTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  fuelTitle: { fontSize: 10, fontWeight: '900', color: Colors.accent.primaryLight, letterSpacing: 1.5 },
+  fuelAdvice: { fontSize: 13, color: Colors.text.primary, lineHeight: 20, fontWeight: '500', fontStyle: 'italic' },
+
+  fabContainer: { position: 'absolute', bottom: 100, right: 20, alignItems: 'flex-end' },
+  fab: { width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.bg.elevated, justifyContent: 'center', alignItems: 'center', elevation: 10, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  musicMenu: { backgroundColor: Colors.bg.card, borderRadius: 20, padding: 8, marginBottom: 12, borderWidth: 1, borderColor: Colors.border.subtle, width: 120 },
+  menuItem: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 12 },
+  menuText: { fontSize: 12, fontWeight: 'bold', color: Colors.text.primary },
 
   sectionHeading: { fontSize: 11, fontWeight: '900', color: Colors.text.secondary, letterSpacing: 3, marginBottom: 20, marginLeft: 5, opacity: 0.6 },
   
