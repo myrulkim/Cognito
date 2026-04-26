@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, Dimensions, Share, FlatList } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { ArrowLeft, RefreshCcw, Share2, Brain } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -50,6 +51,7 @@ const Card = ({ emoji, isFlipped, isMatched, onPress, size }) => {
 
 export default function FlashMatch() {
   const [level, setLevel] = useState(null);
+  const [unlockedLevels, setUnlockedLevels] = useState([1]);
   const [showLevelModal, setShowLevelModal] = useState(true);
   const [gameState, setGameState] = useState('IDLE');
   const [cards, setCards] = useState([]);
@@ -60,6 +62,17 @@ export default function FlashMatch() {
   const { user } = useAuth();
   
   const timerRef = useRef(null);
+
+  useEffect(() => {
+    loadUnlockedLevels();
+  }, []);
+
+  const loadUnlockedLevels = async () => {
+    try {
+      const saved = await AsyncStorage.getItem('unlocked_flash_match');
+      if (saved) setUnlockedLevels(JSON.parse(saved));
+    } catch (e) { console.error(e); }
+  };
 
   useEffect(() => {
     if (gameState === 'PLAYING' && timeLeft > 0) {
@@ -114,9 +127,24 @@ export default function FlashMatch() {
     }
   };
 
-  const endGame = () => {
+  const endGame = async () => {
     setGameState('DONE');
     saveScore();
+
+    // Unlocking Logic
+    let newUnlocked = [...unlockedLevels];
+    const finalScore = score + (timeLeft * 5);
+    if (level === 1 && finalScore >= 100 && !unlockedLevels.includes(2)) {
+        newUnlocked.push(2);
+    } else if (level === 2 && finalScore >= 300 && !unlockedLevels.includes(3)) {
+        newUnlocked.push(3);
+    }
+    
+    if (newUnlocked.length !== unlockedLevels.length) {
+        setUnlockedLevels(newUnlocked);
+        await AsyncStorage.setItem('unlocked_flash_match', JSON.stringify(newUnlocked));
+    }
+
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
@@ -183,6 +211,7 @@ export default function FlashMatch() {
       <LevelSelectorModal 
         visible={showLevelModal} 
         onSelect={startGame} 
+        unlockedLevels={unlockedLevels}
         gameTitle="Flash Match"
       />
 

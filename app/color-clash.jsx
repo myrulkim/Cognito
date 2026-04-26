@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, SafeAreaView, Animated, Dimensions, Share } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { ArrowLeft, Zap, RefreshCcw, Share2 } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -25,6 +26,7 @@ const COLOR_OPTIONS = [
 
 export default function ColorClash() {
   const [level, setLevel] = useState(null);
+  const [unlockedLevels, setUnlockedLevels] = useState([1]);
   const [showLevelModal, setShowLevelModal] = useState(true);
   const [gameState, setGameState] = useState('IDLE'); // IDLE, PLAYING, DONE
   const [target, setTarget] = useState({ text: '', color: '' });
@@ -35,6 +37,17 @@ export default function ColorClash() {
   
   const timerRef = useRef(null);
   const fadeAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    loadUnlockedLevels();
+  }, []);
+
+  const loadUnlockedLevels = async () => {
+    try {
+      const saved = await AsyncStorage.getItem('unlocked_color_clash');
+      if (saved) setUnlockedLevels(JSON.parse(saved));
+    } catch (e) { console.error(e); }
+  };
 
   useEffect(() => {
     if (gameState === 'PLAYING' && timeLeft > 0) {
@@ -104,10 +117,26 @@ export default function ColorClash() {
     }
   };
 
-  const endGame = () => {
+  const endGame = async () => {
     setGameState('DONE');
     clearInterval(timerRef.current);
     saveScore();
+    
+    // Unlocking Logic
+    let newUnlocked = [...unlockedLevels];
+    if (level === 1 && score >= 100 && !unlockedLevels.includes(2)) {
+        newUnlocked.push(2);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } else if (level === 2 && score >= 250 && !unlockedLevels.includes(3)) {
+        newUnlocked.push(3);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+    
+    if (newUnlocked.length !== unlockedLevels.length) {
+        setUnlockedLevels(newUnlocked);
+        await AsyncStorage.setItem('unlocked_color_clash', JSON.stringify(newUnlocked));
+    }
+
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
@@ -170,6 +199,7 @@ export default function ColorClash() {
       <LevelSelectorModal 
         visible={showLevelModal} 
         onSelect={startGame} 
+        unlockedLevels={unlockedLevels}
         gameTitle="Color Clash"
       />
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions, Share } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { ArrowLeft, RefreshCcw, Share2, Target } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -17,6 +18,7 @@ const { width } = Dimensions.get('window');
 
 export default function FocusGrid() {
   const [level, setLevel] = useState(null);
+  const [unlockedLevels, setUnlockedLevels] = useState([1]);
   const [showLevelModal, setShowLevelModal] = useState(true);
   const [gameState, setGameState] = useState('IDLE'); 
   const [numbers, setNumbers] = useState([]);
@@ -25,6 +27,17 @@ export default function FocusGrid() {
   const { user } = useAuth();
   
   const timerRef = useRef(null);
+
+  useEffect(() => {
+    loadUnlockedLevels();
+  }, []);
+
+  const loadUnlockedLevels = async () => {
+    try {
+      const saved = await AsyncStorage.getItem('unlocked_focus_grid');
+      if (saved) setUnlockedLevels(JSON.parse(saved));
+    } catch (e) { console.error(e); }
+  };
 
   useEffect(() => {
     if (gameState === 'PLAYING') {
@@ -69,9 +82,23 @@ export default function FocusGrid() {
     }
   };
 
-  const endGame = () => {
+  const endGame = async () => {
     setGameState('DONE');
     saveScore();
+
+    // Unlocking Logic (Time based: Level 1 < 15s, Level 2 < 40s)
+    let newUnlocked = [...unlockedLevels];
+    if (level === 1 && timer <= 15 && !unlockedLevels.includes(2)) {
+        newUnlocked.push(2);
+    } else if (level === 2 && timer <= 40 && !unlockedLevels.includes(3)) {
+        newUnlocked.push(3);
+    }
+    
+    if (newUnlocked.length !== unlockedLevels.length) {
+        setUnlockedLevels(newUnlocked);
+        await AsyncStorage.setItem('unlocked_focus_grid', JSON.stringify(newUnlocked));
+    }
+
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
@@ -140,6 +167,7 @@ export default function FocusGrid() {
       <LevelSelectorModal 
         visible={showLevelModal} 
         onSelect={startGame} 
+        unlockedLevels={unlockedLevels}
         gameTitle="Focus Grid"
       />
 
