@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Dimensions, Animated, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Sparkles, Brain, Lock, Eye, Zap, Gamepad2, Blocks, Bug, CheckCircle2 } from 'lucide-react-native';
+import { Sparkles, Brain, Lock, Eye, Zap, Gamepad2, Blocks, Bug, CheckCircle2, Target } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import ThemedText from '../../components/ThemedText';
 import { Colors } from '../../constants/Colors';
@@ -15,14 +15,15 @@ const { width } = Dimensions.get('window');
 
 const CORE_GAMES = [
   { id: 'logic', title: 'Logic Test', desc: 'Deductive IQ Test.', icon: Brain, color: Colors.accent.secondary, route: '/logic-test', difficulty: 'HARD', locked: false, glow: Colors.accent.secondary },
-  { id: 'ai-quiz', title: 'Academic', desc: 'Dynamic KSSM Syllabus.', icon: Sparkles, color: Colors.accent.primaryLight, route: '/ai-quiz', difficulty: 'VARIED', locked: false, glow: Colors.accent.primary },
+  { id: 'color-clash', title: 'Color Clash', desc: 'Stroop Effect Test.', icon: Sparkles, color: Colors.accent.danger, route: '/color-clash', difficulty: '3 LEVELS', locked: false, glow: Colors.accent.danger },
   { id: 'spatial', title: 'Spatial Vision', desc: 'Spatial Manipulation.', icon: Eye, color: Colors.accent.warn, route: '/spatial-vision', difficulty: 'HARD', locked: false, glow: Colors.accent.warn },
 ];
 
 const TRAINING_GAMES = [
+  { id: 'focus', title: 'Focus Grid', desc: 'Attention Speed.', icon: Target, color: Colors.accent.warn, route: '/focus-grid', difficulty: '3 LEVELS' },
+  { id: 'flash', title: 'Flash Match', desc: 'Visual Memory.', icon: Zap, color: Colors.accent.primaryLight, route: '/flash-match', difficulty: '3 LEVELS' },
+  { id: 'ai-quiz', title: 'Academic', desc: 'Dynamic KSSM Syllabus.', icon: Sparkles, color: Colors.accent.primaryLight, route: '/ai-quiz', difficulty: 'VARIED', locked: false, glow: Colors.accent.primary },
   { id: 'math', title: 'Mental Math', desc: 'Number Reflexes.', icon: Blocks, color: '#38BDF8', route: '/mental-math', difficulty: 'EASY' },
-  { id: 'memory', title: 'Memory Flip', desc: 'Visual Memory.', icon: Gamepad2, color: Colors.accent.danger, route: '/memory-flip', difficulty: 'MEDIUM' },
-  { id: 'rapid', title: 'Rapid Fire', desc: 'Reaction Speed.', icon: Zap, color: Colors.accent.success, route: '/rapid-fire', difficulty: 'MEDIUM', locked: false },
 ];
 
 const FloatingCard = ({ item, onPress, type = 'large' }) => {
