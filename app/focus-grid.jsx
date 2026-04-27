@@ -13,6 +13,7 @@ import ThemedText from '../components/ThemedText';
 import ThemedView from '../components/ThemedView';
 import { Colors } from '../constants/Colors';
 import LevelSelectorModal from '../components/LevelSelectorModal';
+import { playCorrect, playWrong, playTimerTick, playVictory } from '../src/utils/SoundEngine';
 
 const { width } = Dimensions.get('window');
 
@@ -42,7 +43,11 @@ export default function FocusGrid() {
   useEffect(() => {
     if (gameState === 'PLAYING') {
       timerRef.current = setInterval(() => {
-        setTimer(prev => prev + 0.1);
+        setTimer(prev => {
+          // Timer tick sound every second when above 10s, faster sound after
+          if (prev > 0) playTimerTick();
+          return parseFloat((prev + 0.1).toFixed(1));
+        });
       }, 100);
     } else {
       clearInterval(timerRef.current);
@@ -67,17 +72,17 @@ export default function FocusGrid() {
     if (gameState !== 'PLAYING') return;
 
     if (num === nextNumber) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      playCorrect();
       const lastNum = level === 1 ? 9 : level === 2 ? 16 : 25;
       
       if (num === lastNum) {
+        playVictory();
         endGame();
       } else {
         setNextNumber(prev => prev + 1);
       }
     } else {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      // Time penalty for mistakes
+      playWrong();
       setTimer(prev => prev + 1);
     }
   };

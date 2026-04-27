@@ -12,6 +12,7 @@ import ThemedText from '../components/ThemedText';
 import ThemedView from '../components/ThemedView';
 import { Colors } from '../constants/Colors';
 import LevelSelectorModal from '../components/LevelSelectorModal';
+import { playCorrect, playWrong, playTimerCritical, playTimerTick, playVictory, playGameOver } from '../src/utils/SoundEngine';
 
 const { width } = Dimensions.get('window');
 
@@ -52,7 +53,11 @@ export default function ColorClash() {
   useEffect(() => {
     if (gameState === 'PLAYING' && timeLeft > 0) {
       timerRef.current = setInterval(() => {
-        setTimeLeft(prev => prev - 1);
+        setTimeLeft(prev => {
+          if (prev <= 3 && prev > 0) playTimerCritical();
+          else if (prev <= 6) playTimerTick();
+          return prev - 1;
+        });
       }, 1000);
     } else if (timeLeft === 0) {
       endGame();
@@ -103,16 +108,14 @@ export default function ColorClash() {
   const handlePress = (selected) => {
     if (gameState !== 'PLAYING') return;
 
-    // The goal is to match the COLOR of the text, not the word
     const isCorrect = selected.hex === target.color;
 
     if (isCorrect) {
+      playCorrect();
       setScore(prev => prev + (level * 10));
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       generateRound(level);
     } else {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      // Penalty for wrong answer in higher levels
+      playWrong();
       if (level > 1) setTimeLeft(prev => Math.max(0, prev - 2));
     }
   };

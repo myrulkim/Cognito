@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import ThemedText from '../components/ThemedText';
 import ThemedView from '../components/ThemedView';
 import { Colors } from '../constants/Colors';
+import { playCorrect, playWrong, playVictory } from '../src/utils/SoundEngine';
 
 
 const OptionButton = ({ option, onPress, isSelected, isCorrectItem, showResults }) => {
@@ -131,6 +132,12 @@ export default function LogicTest() {
     const isCorrect = String(option) === String(questions[currentIndex].answer);
     setSelectedOption(option);
 
+    if (isCorrect) {
+      playCorrect();
+    } else {
+      playWrong();
+    }
+
     let nextScore = score + (isCorrect ? 10 : 0);
     setScore(nextScore);
 
@@ -139,9 +146,10 @@ export default function LogicTest() {
             setCurrentIndex(prev => prev + 1);
             setSelectedOption(null);
         } else {
+            playVictory();
             finishGame(nextScore);
         }
-    }, 1000); // 1 saat delay untuk tunjuk warna hijau/merah
+    }, 800);
   };
 
   const finishGame = async (finalTotal) => {

@@ -13,6 +13,7 @@ import ThemedText from '../components/ThemedText';
 import ThemedView from '../components/ThemedView';
 import { Colors } from '../constants/Colors';
 import LevelSelectorModal from '../components/LevelSelectorModal';
+import { playFlip, playMatch, playWrong, playTimerCritical, playTimerTick, playVictory, playGameOver } from '../src/utils/SoundEngine';
 
 const { width } = Dimensions.get('window');
 
@@ -76,8 +77,15 @@ export default function FlashMatch() {
 
   useEffect(() => {
     if (gameState === 'PLAYING' && timeLeft > 0) {
-      timerRef.current = setInterval(() => setTimeLeft(p => p - 1), 1000);
+      timerRef.current = setInterval(() => {
+        setTimeLeft(p => {
+          if (p <= 3 && p > 0) playTimerCritical();
+          else if (p <= 8) playTimerTick();
+          return p - 1;
+        });
+      }, 1000);
     } else if (timeLeft === 0) {
+      playGameOver();
       endGame();
     }
     return () => clearInterval(timerRef.current);
@@ -106,22 +114,24 @@ export default function FlashMatch() {
   const handleCardPress = (id) => {
     if (flipped.length === 2) return;
     
+    playFlip();
     const newFlipped = [...flipped, id];
     setFlipped(newFlipped);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     if (newFlipped.length === 2) {
       const [first, second] = newFlipped;
       if (cards[first].emoji === cards[second].emoji) {
+        playMatch();
         setMatched([...matched, first, second]);
         setFlipped([]);
         setScore(s => s + (level * 20));
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         
         if (matched.length + 2 === cards.length) {
+          playVictory();
           endGame();
         }
       } else {
+        playWrong();
         setTimeout(() => setFlipped([]), 800);
       }
     }

@@ -10,6 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 import ThemedText from '../components/ThemedText';
 import ThemedView from '../components/ThemedView';
 import { Colors } from '../constants/Colors';
+import { playCorrect, playWrong, playTimerCritical, playVictory } from '../src/utils/SoundEngine';
 
 
 export default function RapidFire() {
@@ -58,7 +59,7 @@ export default function RapidFire() {
     if (gameState === 'WAITING') {
       clearTimeout(timerId);
       setGameState('IDLE');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      playWrong();
       alert("Too early! Don't cheat! 😂");
     } else if (gameState === 'READY') {
       const endTime = Date.now();
@@ -66,7 +67,7 @@ export default function RapidFire() {
       setReactionTime(diff);
       setRounds(prev => [...prev, diff]);
       setGameState('RESULT');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      playCorrect();
     }
   };
 

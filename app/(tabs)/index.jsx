@@ -11,7 +11,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { db } from '../../src/config/firebase';
 import { collection, query, where, getDocs, limit, orderBy } from 'firebase/firestore';
 import { getBrainFuelAdvice } from '../../src/services/groq';
-import { Coffee, Music, Volume2, VolumeX, RefreshCw } from 'lucide-react-native';
+import { Coffee, RefreshCw } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -30,91 +30,6 @@ const BrainFuelCard = ({ advice, onRefresh, loading }) => {
       <ThemedText style={styles.fuelAdvice}>
         {loading ? "Menyediakan nutrisi otak..." : advice}
       </ThemedText>
-    </View>
-  );
-};
-
-const FocusMusicFAB = () => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
-  const [activeTrack, setActiveTrack] = useState(null);
-  const audioRef = useRef(null);
-
-  const ambientSounds = [
-    { id: 'rain', name: '🌧️ Rain', url: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3' },
-    { id: 'waves', name: '🌊 Ocean', url: 'https://cdn.pixabay.com/download/audio/2021/08/09/audio_dc39bdc867.mp3' },
-    { id: 'forest', name: '🌲 Forest', url: 'https://cdn.pixabay.com/download/audio/2021/09/06/audio_b519c76049.mp3' },
-  ];
-
-  function playTrack(track) {
-    // Stop existing audio
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
-    // Use Web Audio API (works on all browsers & PWA)
-    if (typeof Audio !== 'undefined') {
-      const audio = new Audio(track.url);
-      audio.loop = true;
-      audio.volume = 0.4;
-      audio.play().catch(e => console.warn('Audio play failed:', e));
-      audioRef.current = audio;
-      setActiveTrack(track.id);
-      setIsPlaying(true);
-      setShowMenu(false);
-    }
-  }
-
-  function togglePlay() {
-    if (isPlaying && audioRef.current) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-    } else if (!isPlaying && audioRef.current) {
-      audioRef.current.play();
-      setIsPlaying(true);
-    } else {
-      setShowMenu(prev => !prev);
-    }
-  }
-
-  useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
-  }, []);
-
-  return (
-    <View style={styles.fabContainer}>
-      {showMenu && (
-        <View style={styles.musicMenu}>
-          <ThemedText style={styles.menuHeader}>FOCUS SOUNDS</ThemedText>
-          {ambientSounds.map(s => (
-            <TouchableOpacity
-              key={s.id}
-              style={[styles.menuItem, activeTrack === s.id && isPlaying && styles.menuItemActive]}
-              onPress={() => playTrack(s)}
-            >
-              <ThemedText style={[styles.menuText, activeTrack === s.id && isPlaying && { color: Colors.accent.primaryLight }]}>
-                {s.name}
-              </ThemedText>
-            </TouchableOpacity>
-          ))}
-          {isPlaying && (
-            <TouchableOpacity style={styles.menuItemStop} onPress={() => { audioRef.current?.pause(); setIsPlaying(false); setActiveTrack(null); setShowMenu(false); }}>
-              <ThemedText style={{ fontSize: 11, color: Colors.accent.danger, fontWeight: 'bold' }}>⏹ Stop</ThemedText>
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
-      <TouchableOpacity
-        style={[styles.fab, isPlaying && { backgroundColor: Colors.accent.primary, shadowColor: Colors.accent.primary, shadowOpacity: 0.5, shadowRadius: 15, elevation: 15 }]}
-        onPress={togglePlay}
-      >
-        {isPlaying ? <Volume2 size={22} color="#FFF" /> : <Music size={22} color="#FFF" />}
-      </TouchableOpacity>
     </View>
   );
 };
@@ -290,8 +205,6 @@ export default function HomeScreen() {
 
         <View style={{ height: 120 }} />
       </ScrollView>
-      
-      <FocusMusicFAB />
     </ThemedView>
   );
 }
@@ -317,15 +230,6 @@ const styles = StyleSheet.create({
   fuelTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   fuelTitle: { fontSize: 10, fontWeight: '900', color: Colors.accent.primaryLight, letterSpacing: 1.5 },
   fuelAdvice: { fontSize: 13, color: Colors.text.primary, lineHeight: 20, fontWeight: '500', fontStyle: 'italic' },
-
-  fabContainer: { position: 'absolute', bottom: 100, right: 20, alignItems: 'flex-end' },
-  fab: { width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.bg.elevated, justifyContent: 'center', alignItems: 'center', elevation: 10, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  musicMenu: { backgroundColor: Colors.bg.card, borderRadius: 20, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: Colors.border.subtle, width: 140 },
-  menuHeader: { fontSize: 9, fontWeight: '900', color: Colors.text.secondary, letterSpacing: 1.5, paddingHorizontal: 12, paddingVertical: 6 },
-  menuItem: { paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12 },
-  menuItemActive: { backgroundColor: 'rgba(124, 58, 237, 0.1)' },
-  menuItemStop: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 12, marginTop: 4, borderTopWidth: 1, borderTopColor: Colors.border.subtle, alignItems: 'center' },
-  menuText: { fontSize: 13, fontWeight: '600', color: Colors.text.primary },
 
   sectionHeading: { fontSize: 11, fontWeight: '900', color: Colors.text.secondary, letterSpacing: 3, marginBottom: 20, marginLeft: 5, opacity: 0.6 },
   

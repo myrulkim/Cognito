@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import ThemedText from '../components/ThemedText';
 import ThemedView from '../components/ThemedView';
 import { Colors } from '../constants/Colors';
+import { playCorrect, playWrong, playTimerTick, playTimerCritical, playVictory } from '../src/utils/SoundEngine';
 
 
 const OptionButton = ({ option, onPress, isSelected, isCorrectItem, showResults }) => {
@@ -49,12 +50,28 @@ export default function MentalMath() {
   const [time, setTime] = useState(15);
   const [selectedOption, setSelectedOption] = useState(null);
   const { user } = useAuth();
-
-  const progWidth = useRef(new Animated.Value(0)).current;
+  const timerRef = useRef(null);
 
   useEffect(() => {
     generateNewQuestion();
   }, []);
+
+  // Timer with sound
+  useEffect(() => {
+    if (selectedOption !== null) return;
+    timerRef.current = setInterval(() => {
+      setTime(prev => {
+        if (prev <= 3 && prev > 0) playTimerCritical();
+        else if (prev <= 6) playTimerTick();
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timerRef.current);
+  }, [round, selectedOption]);
 
   useEffect(() => {
     Animated.timing(progWidth, {
@@ -98,23 +115,28 @@ export default function MentalMath() {
 
   const handleAnswer = (selected) => {
     if (selectedOption !== null) return;
-
+    clearInterval(timerRef.current);
     setSelectedOption(selected);
     const isCorrect = selected === currentQ.answer;
 
     if (isCorrect) {
+      playCorrect();
       setScore(prev => prev + 10);
+    } else {
+      playWrong();
     }
 
     setTimeout(() => {
         if (round < 10) {
           setRound(prev => prev + 1);
+          setTime(15);
           generateNewQuestion();
           setSelectedOption(null);
         } else {
+          playVictory();
           saveResult(score + (isCorrect ? 10 : 0));
         }
-    }, 1000);
+    }, 800);
   };
 
   const saveResult = async (finalScore) => {
