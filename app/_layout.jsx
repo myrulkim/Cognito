@@ -94,7 +94,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <AuthProvider key={`auth-${themeKey}`}>
         <AuthGuard>
-          <StatusBar style="light" />
+          <StatusBar style="dark" />
           <RootLayoutNav themeKey={themeKey} />
         </AuthGuard>
       </AuthProvider>
