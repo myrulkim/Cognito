@@ -4,13 +4,14 @@ import {
   TouchableOpacity, ScrollView, Dimensions, Alert,
   RefreshControl, Text
 } from 'react-native';
-import { Zap, User, HelpCircle, Star, LogOut, ChevronRight, Trophy, Shield, Medal, Flame, Ribbon } from 'lucide-react-native';
+import { Zap, User, HelpCircle, Star, LogOut, ChevronRight, Trophy, Shield, Medal, Flame, Ribbon, Globe } from 'lucide-react-native';
 import Svg, { Circle, Text as SvgText, Polygon, Line, Rect, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { db } from '../../src/config/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../src/contexts/LanguageContext';
 import ThemedText from '../../components/ThemedText';
 import ThemedView from '../../components/ThemedView';
 import { Colors } from '../../constants/Colors';
@@ -37,10 +38,11 @@ const GeometricPattern = ({ color }) => (
 
 // ─── Radar Chart ───────────────────────────────────────────────
 const RadarChart = ({ dataValues }) => {
+  const { t } = useLanguage();
   const size = width * 0.45;
   const center = size / 2;
   const radius = size * 0.38;
-  const labels = ['Logik', 'Mem', 'Mat', 'Ruang', 'Laju'];
+  const labels = [t('categories.logic').substring(0,3), t('categories.memory').substring(0,3), t('categories.math').substring(0,3), t('categories.spatial').substring(0,3), t('categories.speed').substring(0,3)];
   const points = dataValues.map((val, i) => {
     const angle = (Math.PI * 2 * i) / dataValues.length - Math.PI / 2;
     return `${center + radius * val * Math.cos(angle)},${center + radius * val * Math.sin(angle)}`;
@@ -81,12 +83,19 @@ const RadarChart = ({ dataValues }) => {
 
 // ─── Identity Card ─────────────────────────────────────────────
 const IdentityCard = ({ radar }) => {
-  const titles = [
+  const { t, language } = useLanguage();
+  const titles = language === 'bm' ? [
     { name: 'The Architect', desc: 'Pakar Logik & Penaakulan. Anda membina struktur mental yang kukuh.', color: Colors.accent.primary },
     { name: 'The Vault', desc: 'Master Memori Visual. Anda menyimpan setiap butiran dengan ketepatan.', color: Colors.accent.rose },
     { name: 'Human Calculator', desc: 'Tokoh Angka. Nombor mengalir melalui minda anda dengan mudah.', color: Colors.accent.sky },
     { name: 'The Visionary', desc: 'Pakar Ruang 3D. Anda boleh memanipulasi idea dalam dimensi.', color: Colors.accent.warn },
     { name: 'The Sonic Mind', desc: 'Lagenda Kelajuan Reaksi. Refleks anda melampaui kelajuan minda.', color: Colors.accent.success },
+  ] : [
+    { name: 'The Architect', desc: 'Expert in Logic & Reasoning. You build solid mental structures.', color: Colors.accent.primary },
+    { name: 'The Vault', desc: 'Master of Visual Memory. You store every detail with precision.', color: Colors.accent.rose },
+    { name: 'Human Calculator', desc: 'Number Specialist. Numbers flow through your mind with ease.', color: Colors.accent.sky },
+    { name: 'The Visionary', desc: '3D Spatial Expert. You can manipulate ideas in dimensions.', color: Colors.accent.warn },
+    { name: 'The Sonic Mind', desc: 'Reaction Speed Legend. Your reflexes exceed the speed of thought.', color: Colors.accent.success },
   ];
   const maxIndex = radar.indexOf(Math.max(...radar));
   const id = titles[maxIndex] || titles[0];
@@ -97,7 +106,7 @@ const IdentityCard = ({ radar }) => {
       <View style={styles.identityContent}>
         <View style={[styles.identityBadge, { backgroundColor: `${id.color}12` }]}>
           <Zap size={10} color={id.color} />
-          <Text style={[styles.identityBadgeText, { color: id.color }]}>IDENTITI KOGNITIF</Text>
+          <Text style={[styles.identityBadgeText, { color: id.color }]}>{t('profile.identity')}</Text>
         </View>
         <Text style={[styles.identityName, { color: id.color }]}>{id.name}</Text>
         <Text style={styles.identityDesc}>{id.desc}</Text>
@@ -109,6 +118,7 @@ const IdentityCard = ({ radar }) => {
 // ─── Profile Screen ────────────────────────────────────────────
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
+  const { language, changeLanguage, t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -148,10 +158,10 @@ export default function ProfileScreen() {
       ];
       const avg = radar.reduce((a, b) => a + b, 0) / 5;
       const iq = Math.floor(90 + avg * 50);
-      let rank = 'NOVICE';
-      if (iq > 110) rank = 'SMART';
-      if (iq > 125) rank = 'SUPERIOR';
-      if (iq > 140) rank = 'GENIUS';
+      let rank = t('profile.iq_rank.novice');
+      if (iq > 110) rank = t('profile.iq_rank.smart');
+      if (iq > 125) rank = t('profile.iq_rank.superior');
+      if (iq > 140) rank = t('profile.iq_rank.genius');
 
       setProfileData({ iq, highestScore: maxScore, highestScoreGame: maxScoreGame, totalTests: count, testCounts, radar, rankLabel: rank });
     } catch (e) { console.error(e); }
@@ -201,11 +211,30 @@ export default function ProfileScreen() {
           <Text style={styles.profileEmail}>{user?.email}</Text>
         </View>
 
+        {/* ── Language Selector ── */}
+        <View style={styles.langSelectorWrapper}>
+          <Globe size={16} color={Colors.text.muted} style={{ marginRight: 10 }} />
+          <View style={styles.langSelector}>
+            <TouchableOpacity 
+              onPress={() => changeLanguage('bm')}
+              style={[styles.langBtn, language === 'bm' && styles.langBtnActive]}
+            >
+              <Text style={[styles.langText, language === 'bm' && styles.langTextActive]}>BM</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              onPress={() => changeLanguage('en')}
+              style={[styles.langBtn, language === 'en' && styles.langBtnActive]}
+            >
+              <Text style={[styles.langText, language === 'en' && styles.langTextActive]}>EN</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* ── Cognitive Identity Card ── */}
         <IdentityCard radar={profileData.radar} />
 
         {/* ── IQ Gauge ── */}
-        <Text style={styles.sectionLabel}>INDEKS IQ SEMASA</Text>
+        <Text style={styles.sectionLabel}>{t('profile.iq_index')}</Text>
         <View style={styles.iqCard}>
           <View style={styles.iqLeft}>
             <Svg height={140} width={140} viewBox="0 0 100 100">
@@ -221,29 +250,29 @@ export default function ProfileScreen() {
           </View>
           <View style={styles.iqRight}>
             <TouchableOpacity style={styles.miniStat}
-              onPress={() => Alert.alert('Skor Terbaik', `${profileData.highestScore} mata dalam ${profileData.highestScoreGame}`)}>
+              onPress={() => Alert.alert(t('profile.best_score'), `${profileData.highestScore} ${t('points')} dalam ${profileData.highestScoreGame}`)}>
               <Text style={styles.miniStatValue}>{profileData.highestScore}</Text>
-              <Text style={styles.miniStatLabel}>Skor Terbaik</Text>
+              <Text style={styles.miniStatLabel}>{t('profile.best_score')}</Text>
               <Text style={styles.miniStatGame} numberOfLines={1}>{profileData.highestScoreGame}</Text>
             </TouchableOpacity>
             <View style={styles.miniStatDivider} />
             <TouchableOpacity style={styles.miniStat}
-              onPress={() => Alert.alert('Ujian Selesai', Object.entries(profileData.testCounts).map(([g, c]) => `${g}: ${c}`).join('\n') || 'Tiada lagi.')}>
+              onPress={() => Alert.alert(t('profile.tests_done'), Object.entries(profileData.testCounts).map(([g, c]) => `${g}: ${c}`).join('\n') || 'Tiada lagi.')}>
               <Text style={styles.miniStatValue}>{profileData.totalTests}</Text>
-              <Text style={styles.miniStatLabel}>Ujian Selesai</Text>
-              <Text style={styles.miniStatGame}>Ketuk untuk butiran</Text>
+              <Text style={styles.miniStatLabel}>{t('profile.tests_done')}</Text>
+              <Text style={styles.miniStatGame}>{t('profile.details')}</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* ── Brain Radar ── */}
-        <Text style={[styles.sectionLabel, { marginTop: 24 }]}>ANALITIK OTAK</Text>
+        <Text style={[styles.sectionLabel, { marginTop: 24 }]}>{t('profile.brain_analytics')}</Text>
         <View style={styles.radarCard}>
           <RadarChart dataValues={profileData.radar} />
           <View style={styles.radarInfo}>
-            <Text style={styles.radarTitle}>Integriti Otak</Text>
-            <Text style={styles.radarDesc}>Data disegerakkan terus dari pangkalan data awan anda.</Text>
-            {['Logik', 'Memori', 'Matematik', 'Ruang', 'Laju'].map((label, i) => (
+            <Text style={styles.radarTitle}>{t('profile.brain_integrity')}</Text>
+            <Text style={styles.radarDesc}>{t('profile.brain_desc')}</Text>
+            {[t('categories.logic'), t('categories.memory'), t('categories.math'), t('categories.spatial'), t('categories.speed')].map((label, i) => (
               <View key={label} style={styles.radarRow}>
                 <View style={[styles.radarDot, { backgroundColor: Colors.accent.primary, opacity: 0.4 + profileData.radar[i] * 0.6 }]} />
                 <Text style={styles.radarRowLabel}>{label}</Text>
@@ -254,7 +283,7 @@ export default function ProfileScreen() {
         </View>
 
         {/* ── Badges ── */}
-        <Text style={[styles.sectionLabel, { marginTop: 24 }]}>LENCANA PENCAPAIAN</Text>
+        <Text style={[styles.sectionLabel, { marginTop: 24 }]}>{t('profile.achievements')}</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.badgeList}>
           {BADGES.map((b, i) => {
             const earned = i < 3;
@@ -268,12 +297,12 @@ export default function ProfileScreen() {
         </ScrollView>
 
         {/* ── Settings ── */}
-        <Text style={[styles.sectionLabel, { marginTop: 24 }]}>AKAUN & TETAPAN</Text>
+        <Text style={[styles.sectionLabel, { marginTop: 24 }]}>{t('profile.account_settings')}</Text>
         <View style={styles.settingsCard}>
           {[
-            { icon: User, label: 'Edit Profil', onPress: () => router.push('/edit-profile') },
-            { icon: HelpCircle, label: 'Bantuan & Sokongan', onPress: () => router.push('/help-support') },
-            { icon: Star, label: 'Naik Taraf ke Premium', premium: true, onPress: () => router.push('/premium') },
+            { icon: User, label: t('profile.edit_profile'), onPress: () => router.push('/edit-profile') },
+            { icon: HelpCircle, label: t('profile.help'), onPress: () => router.push('/help-support') },
+            { icon: Star, label: t('profile.upgrade'), premium: true, onPress: () => router.push('/premium') },
           ].map((item, i) => {
             const Icon = item.icon;
             return (
@@ -289,12 +318,12 @@ export default function ProfileScreen() {
           })}
         </View>
 
-        <TouchableOpacity onPress={() => Alert.alert('Log Keluar', 'Anda pasti mahu log keluar?', [
-          { text: 'Batal', style: 'cancel' },
-          { text: 'Ya, Log Keluar', onPress: logout, style: 'destructive' }
+        <TouchableOpacity onPress={() => Alert.alert(t('profile.logout'), t('profile.logout_confirm'), [
+          { text: language === 'bm' ? 'Batal' : 'Cancel', style: 'cancel' },
+          { text: language === 'bm' ? 'Ya, Log Keluar' : 'Yes, Logout', onPress: logout, style: 'destructive' }
         ])} style={styles.logoutBtn}>
           <LogOut size={16} color={Colors.accent.danger} />
-          <Text style={styles.logoutText}>Log Keluar</Text>
+          <Text style={styles.logoutText}>{t('profile.logout')}</Text>
         </TouchableOpacity>
 
         <View style={{ height: 110 }} />
@@ -315,6 +344,13 @@ const styles = StyleSheet.create({
   avatarText: { fontSize: 30, fontWeight: '900', color: '#FFF' },
   profileName: { fontSize: 22, fontWeight: '800', color: Colors.text.primary, letterSpacing: -0.3 },
   profileEmail: { fontSize: 12, color: Colors.text.secondary, marginTop: 3 },
+  
+  langSelectorWrapper: { flexDirection: 'row', alignItems: 'center', marginBottom: 24 },
+  langSelector: { flex: 1, flexDirection: 'row', backgroundColor: Colors.bg.elevated, borderRadius: 16, padding: 4 },
+  langBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 12 },
+  langBtnActive: { backgroundColor: '#FFF', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
+  langText: { fontSize: 12, fontWeight: '700', color: Colors.text.secondary },
+  langTextActive: { color: Colors.accent.primary },
 
   identityCard: { borderRadius: 28, overflow: 'hidden', backgroundColor: '#FFF', marginBottom: 24, borderWidth: 1, shadowColor: '#6366F1', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.08, shadowRadius: 16, elevation: 4 },
   identityContent: { padding: 22 },

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../src/contexts/LanguageContext';
 import { db } from '../../src/config/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { getBrainFuelAdvice } from '../../src/services/groq';
@@ -22,26 +23,29 @@ import { Colors } from '../../constants/Colors';
 const { width } = Dimensions.get('window');
 
 // ─── Brain Fuel Card ───────────────────────────────────────────
-const BrainFuelCard = ({ advice, onRefresh, loading }) => (
-  <View style={styles.fuelCard}>
-    <View style={styles.fuelInner}>
-      <View style={styles.fuelLeft}>
-        <View style={styles.fuelIconBox}>
-          <Coffee size={18} color={Colors.accent.primary} />
+const BrainFuelCard = ({ advice, onRefresh, loading }) => {
+  const { t, language } = useLanguage();
+  return (
+    <View style={styles.fuelCard}>
+      <View style={styles.fuelInner}>
+        <View style={styles.fuelLeft}>
+          <View style={styles.fuelIconBox}>
+            <Coffee size={18} color={Colors.accent.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.fuelLabel}>{t('daily_brain_fuel')}</Text>
+            <Text style={styles.fuelAdvice} numberOfLines={3}>
+              {loading ? (language === 'bm' ? 'Menyediakan nasihat kognitif...' : 'Preparing cognitive advice...') : advice}
+            </Text>
+          </View>
         </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.fuelLabel}>DAILY BRAIN FUEL</Text>
-          <Text style={styles.fuelAdvice} numberOfLines={3}>
-            {loading ? 'Menyediakan nasihat kognitif...' : advice}
-          </Text>
-        </View>
+        <TouchableOpacity onPress={onRefresh} disabled={loading} style={styles.fuelRefresh}>
+          <RefreshCw size={14} color={Colors.accent.primary} />
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity onPress={onRefresh} disabled={loading} style={styles.fuelRefresh}>
-        <RefreshCw size={14} color={Colors.accent.primary} />
-      </TouchableOpacity>
     </View>
-  </View>
-);
+  );
+};
 
 // ─── Core Game Card (Large Horizontal) ─────────────────────────
 const CoreCard = ({ item, onPress }) => {
@@ -146,32 +150,33 @@ const AcademicSection = ({ onPress }) => {
   );
 };
 
-// ─── Game Data ─────────────────────────────────────────────────
-const CORE_GAMES = [
-  {
-    id: 'color-clash', title: 'Color Clash', desc: 'Ujian Stroop Effect.', icon: Sparkles,
-    color: Colors.accent.rose, route: '/color-clash', difficulty: '3 TAHAP', locked: false,
-  },
-  {
-    id: 'logic', title: 'Logic Test', desc: 'Ujian IQ Deduktif.', icon: Brain,
-    color: Colors.accent.primary, route: '/logic-test', difficulty: 'SUSAH', locked: false,
-  },
-  {
-    id: 'spatial', title: 'Spatial Vision', desc: 'Manipulasi Ruang 3D.', icon: Eye,
-    color: Colors.accent.warn, route: '/spatial-vision', difficulty: 'SUSAH', locked: false,
-  },
-];
-
-const TRAINING_GAMES = [
-  { id: 'focus', title: 'Focus Grid', desc: 'Latihan Perhatian.', icon: Target, color: Colors.accent.warn, route: '/focus-grid', difficulty: '3 TAHAP' },
-  { id: 'flash', title: 'Flash Match', desc: 'Memori Visual.', icon: Gamepad2, color: Colors.accent.primary, route: '/flash-match', difficulty: '3 TAHAP' },
-  { id: 'math', title: 'Mental Math', desc: 'Refleks Nombor.', icon: Blocks, color: Colors.accent.sky, route: '/mental-math', difficulty: 'MUDAH' },
-  { id: 'rapid', title: 'Rapid Fire', desc: 'Kelajuan Reaksi.', icon: Zap, color: Colors.accent.success, route: '/rapid-fire', difficulty: 'SEDANG' },
-];
-
 // ─── Home Screen ───────────────────────────────────────────────
 export default function HomeScreen() {
   const { user } = useAuth();
+  const { t, language } = useLanguage();
+
+  // Localized Core Games Data
+  const CORE_GAMES = [
+    {
+      id: 'color-clash', title: 'Color Clash', desc: language === 'bm' ? 'Ujian Stroop Effect.' : 'Stroop Effect Test.', icon: Sparkles,
+      color: Colors.accent.rose, route: '/color-clash', difficulty: t('difficulty.levels'), locked: false,
+    },
+    {
+      id: 'logic', title: 'Logic Test', desc: language === 'bm' ? 'Ujian IQ Deduktif.' : 'Deductive IQ Test.', icon: Brain,
+      color: Colors.accent.primary, route: '/logic-test', difficulty: t('difficulty.hard'), locked: false,
+    },
+    {
+      id: 'spatial', title: 'Spatial Vision', desc: language === 'bm' ? 'Manipulasi Ruang 3D.' : '3D Spatial Manipulation.', icon: Eye,
+      color: Colors.accent.warn, route: '/spatial-vision', difficulty: t('difficulty.hard'), locked: false,
+    },
+  ];
+
+  const TRAINING_GAMES = [
+    { id: 'focus', title: 'Focus Grid', desc: language === 'bm' ? 'Latihan Perhatian.' : 'Attention Training.', icon: Target, color: Colors.accent.warn, route: '/focus-grid', difficulty: t('difficulty.levels') },
+    { id: 'flash', title: 'Flash Match', desc: language === 'bm' ? 'Memori Visual.' : 'Visual Memory.', icon: Gamepad2, color: Colors.accent.primary, route: '/flash-match', difficulty: t('difficulty.levels') },
+    { id: 'math', title: 'Mental Math', desc: language === 'bm' ? 'Refleks Nombor.' : 'Number Reflex.', icon: Blocks, color: Colors.accent.sky, route: '/mental-math', difficulty: t('difficulty.easy') },
+    { id: 'rapid', title: 'Rapid Fire', desc: language === 'bm' ? 'Kelajuan Reaksi.' : 'Reaction Speed.', icon: Zap, color: Colors.accent.success, route: '/rapid-fire', difficulty: t('difficulty.medium') },
+  ];
   const [dailyPoints, setDailyPoints] = useState(0);
   const [advice, setAdvice] = useState('');
   const [adviceLoading, setAdviceLoading] = useState(false);
@@ -227,12 +232,12 @@ export default function HomeScreen() {
         {/* ── Header ── */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>Selamat datang,</Text>
+            <Text style={styles.greeting}>{t('welcome')}</Text>
             <Text style={styles.username}>{userName} 👋</Text>
           </View>
           <View style={styles.pointsBadge}>
             <Zap size={12} color={Colors.accent.primary} />
-            <Text style={styles.pointsText}>{dailyPoints} mata</Text>
+            <Text style={styles.pointsText}>{dailyPoints} {t('points')}</Text>
           </View>
         </View>
 
@@ -253,11 +258,11 @@ export default function HomeScreen() {
               <View style={styles.missionBadge}>
                 <Sparkles size={10} color="#FFF" />
                 <Text style={styles.missionBadgeText}>
-                  {done ? 'MISI SELESAI' : 'MISI HARIAN'}
+                  {done ? t('mission_done') : t('mission_daily')}
                 </Text>
               </View>
-              <Text style={styles.missionTitle}>Brain Workout</Text>
-              <Text style={styles.missionSub}>{dailyPoints} / {TARGET_POINTS} Mata Kognitif</Text>
+              <Text style={styles.missionTitle}>{t('brain_workout')}</Text>
+              <Text style={styles.missionSub}>{dailyPoints} / {TARGET_POINTS} {language === 'bm' ? 'Mata Kognitif' : 'Cognitive Points'}</Text>
               <View style={styles.missionBarBg}>
                 <View style={[styles.missionBarFill, { width: `${progress}%` }]} />
               </View>
@@ -275,7 +280,7 @@ export default function HomeScreen() {
         <AcademicSection onPress={() => handlePress('/ai-quiz')} />
 
         {/* ── Cognitive Core ── */}
-        <Text style={[styles.sectionLabel, { marginTop: 20 }]}>TERAS KOGNITIF</Text>
+        <Text style={[styles.sectionLabel, { marginTop: 20 }]}>{t('cognitive_core')}</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -290,7 +295,7 @@ export default function HomeScreen() {
         </ScrollView>
 
         {/* ── Brain Training ── */}
-        <Text style={[styles.sectionLabel, { marginTop: 28 }]}>LATIHAN OTAK</Text>
+        <Text style={[styles.sectionLabel, { marginTop: 28 }]}>{t('brain_training')}</Text>
         <View style={styles.trainingGrid}>
           {TRAINING_GAMES.map(game => (
             <TrainingCard key={game.id} item={game} onPress={() => handlePress(game.route)} />

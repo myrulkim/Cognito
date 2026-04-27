@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router';
 import { StyleSheet, Platform, View } from 'react-native';
 import { Home, BarChart2, Trophy, User } from 'lucide-react-native';
 import { Colors } from '../../constants/Colors';
+import { useLanguage } from '../../src/contexts/LanguageContext';
 
 const TabIcon = ({ Icon, color, focused }) => (
   <View style={[styles.iconWrap, focused && { backgroundColor: `${Colors.accent.primary}10` }]}>
@@ -10,6 +11,7 @@ const TabIcon = ({ Icon, color, focused }) => (
 );
 
 export default function TabLayout() {
+  const { t } = useLanguage();
   return (
     <Tabs
       screenOptions={{
@@ -23,16 +25,16 @@ export default function TabLayout() {
         ),
       }}
     >
-      <Tabs.Screen name="index" options={{ title: 'Utama',
+      <Tabs.Screen name="index" options={{ title: t('tabs.home'),
         tabBarIcon: ({ color, focused }) => <TabIcon Icon={Home} color={color} focused={focused} />
       }} />
-      <Tabs.Screen name="stats" options={{ title: 'Statistik',
+      <Tabs.Screen name="stats" options={{ title: t('tabs.stats'),
         tabBarIcon: ({ color, focused }) => <TabIcon Icon={BarChart2} color={color} focused={focused} />
       }} />
-      <Tabs.Screen name="leaderboard" options={{ title: 'Kedudukan',
+      <Tabs.Screen name="leaderboard" options={{ title: t('tabs.leaderboard'),
         tabBarIcon: ({ color, focused }) => <TabIcon Icon={Trophy} color={color} focused={focused} />
       }} />
-      <Tabs.Screen name="profile" options={{ title: 'Profil',
+      <Tabs.Screen name="profile" options={{ title: t('tabs.profile'),
         tabBarIcon: ({ color, focused }) => <TabIcon Icon={User} color={color} focused={focused} />
       }} />
     </Tabs>

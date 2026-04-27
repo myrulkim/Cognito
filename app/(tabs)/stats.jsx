@@ -5,16 +5,18 @@ import Svg, { Polygon, Line, Text as SvgText } from 'react-native-svg';
 import { db } from '../../src/config/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../src/contexts/LanguageContext';
 import { Colors } from '../../constants/Colors';
 
 const { width } = Dimensions.get('window');
 
 // ─── Radar Chart ───────────────────────────────────────────────
 const RadarChart = ({ dataValues }) => {
+  const { t } = useLanguage();
   const size = width * 0.65;
   const center = size / 2;
   const radius = size * 0.38;
-  const labels = ['Logik', 'Memori', 'Matematik', 'Ruang', 'Laju'];
+  const labels = [t('categories.logic'), t('categories.memory'), t('categories.math'), t('categories.spatial'), t('categories.speed')];
   const points = dataValues.map((val, i) => {
     const angle = (Math.PI * 2 * i) / dataValues.length - Math.PI / 2;
     return `${center + radius * val * Math.cos(angle)},${center + radius * val * Math.sin(angle)}`;
@@ -58,7 +60,10 @@ const RadarChart = ({ dataValues }) => {
 
 // ─── Heatmap Grid ──────────────────────────────────────────────
 const HeatmapGrid = ({ data }) => {
-  const months = ['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun', 'Jul', 'Og', 'Sep', 'Okt', 'Nov', 'Dis'];
+  const { t, language } = useLanguage();
+  const months = language === 'bm' 
+    ? ['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun', 'Jul', 'Og', 'Sep', 'Okt', 'Nov', 'Dis']
+    : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const currentMonth = new Date().getMonth();
 
   const getColor = (val) => {
@@ -71,8 +76,8 @@ const HeatmapGrid = ({ data }) => {
 
   return (
     <View style={styles.heatmapWrapper}>
-      <Text style={styles.heatmapTitle}>Konsistensi Bulanan</Text>
-      <Text style={styles.heatmapSub}>Lebih gelap = lebih aktif</Text>
+      <Text style={styles.heatmapTitle}>{t('stats.monthly_consistency')}</Text>
+      <Text style={styles.heatmapSub}>{t('stats.darker_active')}</Text>
       <View style={styles.heatmapGrid}>
         {months.map((month, mi) => {
           const isPast = mi <= currentMonth;
@@ -90,11 +95,11 @@ const HeatmapGrid = ({ data }) => {
         })}
       </View>
       <View style={styles.heatmapLegend}>
-        <Text style={styles.legendText}>Kurang</Text>
+        <Text style={styles.legendText}>{t('stats.less')}</Text>
         {[0, 1, 2, 3, 4].map(v => (
           <View key={v} style={[styles.legendBlock, { backgroundColor: getColor(v) }]} />
         ))}
-        <Text style={styles.legendText}>Lebih</Text>
+        <Text style={styles.legendText}>{t('stats.more')}</Text>
       </View>
     </View>
   );
@@ -103,6 +108,7 @@ const HeatmapGrid = ({ data }) => {
 // ─── Stats Screen ──────────────────────────────────────────────
 export default function StatsScreen() {
   const { user } = useAuth();
+  const { t, language } = useLanguage();
   const [chartData, setChartData] = useState([0.2, 0.2, 0.2, 0.2, 0.2]);
   const [heatmapData, setHeatmapData] = useState(Array(12).fill(0));
   const [summary, setSummary] = useState({ total: 0, best: 0, bestGame: '-', streak: 0 });
@@ -168,15 +174,15 @@ export default function StatsScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
         {/* ── Header ── */}
-        <Text style={styles.headerTitle}>Statistik Kognitif</Text>
-        <Text style={styles.headerSub}>Prestasi otak anda dalam rangkaian neural.</Text>
+        <Text style={styles.headerTitle}>{t('stats.title')}</Text>
+        <Text style={styles.headerSub}>{t('stats.sub')}</Text>
 
         {/* ── Summary Stats Row ── */}
         <View style={styles.summaryRow}>
           {[
-            { label: 'Ujian', value: summary.total, icon: Activity, color: Colors.accent.primary },
-            { label: 'Skor Terbaik', value: summary.best, icon: TrendingUp, color: Colors.accent.success },
-            { label: 'Hari Berturut', value: summary.streak, icon: Flame, color: Colors.accent.warn },
+            { label: t('stats.summary.tests'), value: summary.total, icon: Activity, color: Colors.accent.primary },
+            { label: t('stats.summary.best'), value: summary.best, icon: TrendingUp, color: Colors.accent.success },
+            { label: t('stats.summary.streak'), value: summary.streak, icon: Flame, color: Colors.accent.warn },
           ].map((s, i) => {
             const Icon = s.icon;
             return (
@@ -196,12 +202,12 @@ export default function StatsScreen() {
           <View style={styles.cardTopRow}>
             <View style={styles.cardBadge}>
               <Activity size={12} color={Colors.accent.primary} />
-              <Text style={styles.cardBadgeText}>ENJIN PRESTASI LANGSUNG</Text>
+              <Text style={styles.cardBadgeText}>{t('stats.performance_engine')}</Text>
             </View>
           </View>
           <RadarChart dataValues={chartData} />
           <View style={styles.radarLegend}>
-            {['Logik', 'Memori', 'Mat', 'Ruang', 'Laju'].map((label, i) => (
+            {[t('categories.logic'), t('categories.memory'), t('categories.math'), t('categories.spatial'), t('categories.speed')].map((label, i) => (
               <View key={label} style={styles.radarLegendItem}>
                 <View style={[styles.radarLegendDot, { backgroundColor: Colors.accent.primary, opacity: 0.4 + chartData[i] * 0.6 }]} />
                 <Text style={styles.radarLegendLabel}>{label}</Text>
@@ -222,8 +228,8 @@ export default function StatsScreen() {
             <TrendingUp size={18} color={Colors.accent.success} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.bestLabel}>SKOR TERTINGGI SEPANJANG MASA</Text>
-            <Text style={styles.bestScore}>{summary.best} <Text style={styles.bestGame}>dalam {summary.bestGame}</Text></Text>
+            <Text style={styles.bestLabel}>{t('stats.all_time_high')}</Text>
+            <Text style={styles.bestScore}>{summary.best} <Text style={styles.bestGame}>{language === 'bm' ? 'dalam' : 'in'} {summary.bestGame}</Text></Text>
           </View>
         </View>
 

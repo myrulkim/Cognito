@@ -1,5 +1,6 @@
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
+import { LanguageProvider } from '../src/contexts/LanguageContext';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -92,12 +93,14 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <AuthProvider key={`auth-${themeKey}`}>
-        <AuthGuard>
-          <StatusBar style="dark" />
-          <RootLayoutNav themeKey={themeKey} />
-        </AuthGuard>
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider key={`auth-${themeKey}`}>
+          <AuthGuard>
+            <StatusBar style="dark" />
+            <RootLayoutNav themeKey={themeKey} />
+          </AuthGuard>
+        </AuthProvider>
+      </LanguageProvider>
     </SafeAreaProvider>
   );
 }
