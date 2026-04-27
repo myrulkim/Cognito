@@ -106,6 +106,46 @@ const TrainingCard = ({ item, onPress }) => {
   );
 };
 
+// ─── Academic Featured Section ────────────────────────────────
+const AcademicSection = ({ onPress }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  return (
+    <View style={styles.academicWrapper}>
+      <Text style={styles.sectionLabel}>PROGRAM AKADEMIK</Text>
+      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+        <Pressable
+          onPressIn={() => Animated.spring(scaleAnim, { toValue: 0.98, useNativeDriver: true }).start()}
+          onPressOut={() => Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true }).start()}
+          onPress={onPress}
+          style={styles.academicCard}
+        >
+          <LinearGradient
+            colors={[Colors.accent.sky, Colors.accent.skyLight]}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+            style={styles.academicGradient}
+          >
+            <View style={styles.academicContent}>
+              <View style={styles.academicBadge}>
+                <BookOpen size={10} color={Colors.accent.sky} />
+                <Text style={styles.academicBadgeText}>AI-POWERED</Text>
+              </View>
+              <Text style={styles.academicTitle}>Cognito Academic</Text>
+              <Text style={styles.academicSub}>Silibus KSSM Dinamik dikuasakan oleh AI.</Text>
+              <View style={styles.academicBtn}>
+                <Text style={styles.academicBtnText}>Mula Belajar</Text>
+                <ChevronRight size={14} color="#FFF" />
+              </View>
+            </View>
+            <View style={styles.academicIconBox}>
+              <BookOpen size={40} color="#FFF" opacity={0.9} />
+            </View>
+          </LinearGradient>
+        </Pressable>
+      </Animated.View>
+    </View>
+  );
+};
+
 // ─── Game Data ─────────────────────────────────────────────────
 const CORE_GAMES = [
   {
@@ -119,10 +159,6 @@ const CORE_GAMES = [
   {
     id: 'spatial', title: 'Spatial Vision', desc: 'Manipulasi Ruang 3D.', icon: Eye,
     color: Colors.accent.warn, route: '/spatial-vision', difficulty: 'SUSAH', locked: false,
-  },
-  {
-    id: 'ai-quiz', title: 'Akademik', desc: 'Silibus KSSM Dinamik.', icon: BookOpen,
-    color: Colors.accent.sky, route: '/ai-quiz', difficulty: 'PELBAGAI', locked: false,
   },
 ];
 
@@ -235,8 +271,11 @@ export default function HomeScreen() {
         {/* ── Brain Fuel ── */}
         <BrainFuelCard advice={advice} onRefresh={fetchAdvice} loading={adviceLoading} />
 
+        {/* ── Academic Featured Card ── */}
+        <AcademicSection onPress={() => handlePress('/ai-quiz')} />
+
         {/* ── Cognitive Core ── */}
-        <Text style={styles.sectionLabel}>TERAS KOGNITIF</Text>
+        <Text style={[styles.sectionLabel, { marginTop: 20 }]}>TERAS KOGNITIF</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -286,6 +325,19 @@ const styles = StyleSheet.create({
   missionBarBg: { width: '90%', height: 6, backgroundColor: 'rgba(255,255,255,0.25)', borderRadius: 3, marginTop: 14, overflow: 'hidden' },
   missionBarFill: { height: '100%', backgroundColor: '#FFF', borderRadius: 3 },
   missionIconBox: { backgroundColor: 'rgba(255,255,255,0.2)', padding: 16, borderRadius: 22, marginLeft: 16 },
+
+  // Academic Featured
+  academicWrapper: { marginBottom: 28 },
+  academicCard: { borderRadius: 28, overflow: 'hidden', shadowColor: Colors.accent.sky, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 16, elevation: 8 },
+  academicGradient: { padding: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  academicContent: { flex: 1 },
+  academicBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, gap: 5, marginBottom: 12, alignSelf: 'flex-start' },
+  academicBadgeText: { fontSize: 9, fontWeight: '900', color: '#FFF', letterSpacing: 1.2 },
+  academicTitle: { fontSize: 22, fontWeight: '900', color: '#FFF', letterSpacing: -0.5 },
+  academicSub: { fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 4, fontWeight: '600', lineHeight: 18 },
+  academicBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12, gap: 6, marginTop: 16, alignSelf: 'flex-start' },
+  academicBtnText: { fontSize: 12, fontWeight: '800', color: '#FFF' },
+  academicIconBox: { backgroundColor: 'rgba(255,255,255,0.15)', padding: 18, borderRadius: 24, marginLeft: 16 },
 
   // Brain Fuel
   fuelCard: { backgroundColor: '#FFF', borderRadius: 24, marginBottom: 28, shadowColor: '#6366F1', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 16, elevation: 3, borderWidth: 1, borderColor: Colors.border.subtle },
