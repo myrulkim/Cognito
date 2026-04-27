@@ -1,83 +1,45 @@
-const DarkTheme = {
-  bg: {
-    primary: '#0A0A12',
-    card: '#13131F',
-    elevated: '#1A1A2E',
-  },
-  border: {
-    subtle: 'rgba(255,255,255,0.06)',
-  },
-  accent: {
-    primary: '#7C3AED',
-    primaryLight: '#A78BFA',
-    secondary: '#6366F1',
-    secondaryLight: '#818CF8',
-    success: '#34D399',
-    danger: '#F87171',
-    warn: '#FBBF24',
-  },
-  text: {
-    primary: '#F1F5F9',
-    secondary: '#8E8E93',
-    accent: '#A78BFA',
-  },
-  glow: {
-    violet: 'rgba(124,58,237,0.3)',
-    success: 'rgba(52,211,153,0.3)',
-    danger: 'rgba(248,113,113,0.3)',
-  },
-  tabIconDefault: '#64748B',
-  tabIconSelected: '#A78BFA',
-  statusBarStyle: 'light',
-};
+// ============================================================
+// Colors.js — Cognito Design System (Pristine Light Mode)
+// Alif's Palette: Soft Minimalism + Vibrant Indigo/Sky Accents
+// ============================================================
 
-const LightTheme = {
+export const Colors = {
   bg: {
-    primary: '#F8FAFC',
+    primary: '#F8FAFC',   // Pristine white-blue
     card: '#FFFFFF',
-    elevated: '#F1F5F9',
+    elevated: '#F1F5F9',  // Soft grey for inputs/elevation
+    glass: 'rgba(255, 255, 255, 0.7)',
   },
   border: {
-    subtle: 'rgba(0,0,0,0.1)',
+    subtle: 'rgba(99, 102, 241, 0.08)', // Indigo-tinted border
+    light: 'rgba(0,0,0,0.06)',
   },
   accent: {
-    primary: '#7C3AED',
-    primaryLight: '#8B5CF6',
-    secondary: '#4F46E5',
-    secondaryLight: '#6366F1',
-    success: '#10B981',
-    danger: '#EF4444',
-    warn: '#F59E0B',
+    primary: '#6366F1',       // Indigo — main CTA
+    primaryLight: '#818CF8',  // Indigo light
+    secondary: '#4F46E5',     // Deep Indigo
+    sky: '#0EA5E9',           // Sky Blue — reaction/speed
+    skyLight: '#38BDF8',      // Sky light
+    success: '#10B981',       // Emerald
+    danger: '#EF4444',        // Red
+    warn: '#F59E0B',          // Amber
+    rose: '#F43F5E',          // Rose — for wrong answers
   },
   text: {
-    primary: '#0F172A',
-    secondary: '#64748B',
-    accent: '#7C3AED',
+    primary: '#0F172A',    // Slate 900
+    secondary: '#64748B',  // Slate 500
+    muted: '#94A3B8',      // Slate 400
+    accent: '#6366F1',     // Indigo
+    white: '#FFFFFF',
   },
   glow: {
-    violet: 'rgba(124,58,237,0.15)',
-    success: 'rgba(16,185,129,0.15)',
-    danger: 'rgba(239,68,68,0.15)',
+    indigo: 'rgba(99, 102, 241, 0.12)',
+    sky: 'rgba(14, 165, 233, 0.12)',
+    success: 'rgba(16, 185, 129, 0.12)',
+    danger: 'rgba(239, 68, 68, 0.12)',
+    warm: 'rgba(245, 158, 11, 0.12)',
   },
   tabIconDefault: '#94A3B8',
-  tabIconSelected: '#7C3AED',
+  tabIconSelected: '#6366F1',
   statusBarStyle: 'dark',
-};
-
-export const Colors = { ...DarkTheme };
-
-const listeners = [];
-
-export const registerThemeListener = (callback) => {
-  listeners.push(callback);
-  return () => {
-      const idx = listeners.indexOf(callback);
-      if (idx > -1) listeners.splice(idx, 1);
-  };
-};
-
-export const changeAppTheme = (mode) => {
-  const newTheme = mode === 'light' ? LightTheme : DarkTheme;
-  Object.assign(Colors, newTheme);
-  listeners.forEach(cb => cb(mode));
 };

@@ -1,102 +1,150 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Dimensions, Animated, Pressable } from 'react-native';
+import {
+  View, StyleSheet, ScrollView, TouchableOpacity,
+  Dimensions, Animated, Pressable, Text
+} from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Sparkles, Brain, Lock, Eye, Zap, Gamepad2, Blocks, Bug, CheckCircle2, Target } from 'lucide-react-native';
+import {
+  Brain, Eye, Zap, Blocks, Sparkles,
+  Target, CheckCircle2, Lock, ChevronRight,
+  Coffee, RefreshCw, BookOpen, Gamepad2
+} from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import ThemedText from '../../components/ThemedText';
-import { Colors } from '../../constants/Colors';
-import ThemedView from '../../components/ThemedView';
 import { useAuth } from '../../contexts/AuthContext';
 import { db } from '../../src/config/firebase';
-import { collection, query, where, getDocs, limit, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { getBrainFuelAdvice } from '../../src/services/groq';
-import { Coffee, RefreshCw } from 'lucide-react-native';
+import ThemedText from '../../components/ThemedText';
+import ThemedView from '../../components/ThemedView';
+import { Colors } from '../../constants/Colors';
 
 const { width } = Dimensions.get('window');
 
-const BrainFuelCard = ({ advice, onRefresh, loading }) => {
-  return (
-    <View style={styles.fuelCard}>
-      <View style={styles.fuelHeader}>
-        <View style={styles.fuelTitleRow}>
-          <Coffee size={14} color={Colors.accent.primaryLight} />
-          <ThemedText style={styles.fuelTitle}>DAILY BRAIN FUEL</ThemedText>
+// ─── Brain Fuel Card ───────────────────────────────────────────
+const BrainFuelCard = ({ advice, onRefresh, loading }) => (
+  <View style={styles.fuelCard}>
+    <View style={styles.fuelInner}>
+      <View style={styles.fuelLeft}>
+        <View style={styles.fuelIconBox}>
+          <Coffee size={18} color={Colors.accent.primary} />
         </View>
-        <TouchableOpacity onPress={onRefresh} disabled={loading}>
-          <RefreshCw size={14} color={Colors.text.secondary} />
-        </TouchableOpacity>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.fuelLabel}>DAILY BRAIN FUEL</Text>
+          <Text style={styles.fuelAdvice} numberOfLines={3}>
+            {loading ? 'Menyediakan nasihat kognitif...' : advice}
+          </Text>
+        </View>
       </View>
-      <ThemedText style={styles.fuelAdvice}>
-        {loading ? "Menyediakan nutrisi otak..." : advice}
-      </ThemedText>
+      <TouchableOpacity onPress={onRefresh} disabled={loading} style={styles.fuelRefresh}>
+        <RefreshCw size={14} color={Colors.accent.primary} />
+      </TouchableOpacity>
     </View>
-  );
-};
+  </View>
+);
 
-const CORE_GAMES = [
-  { id: 'logic', title: 'Logic Test', desc: 'Deductive IQ Test.', icon: Brain, color: Colors.accent.secondary, route: '/logic-test', difficulty: 'HARD', locked: false, glow: Colors.accent.secondary },
-  { id: 'color-clash', title: 'Color Clash', desc: 'Stroop Effect Test.', icon: Sparkles, color: Colors.accent.danger, route: '/color-clash', difficulty: '3 LEVELS', locked: false, glow: Colors.accent.danger },
-  { id: 'spatial', title: 'Spatial Vision', desc: 'Spatial Manipulation.', icon: Eye, color: Colors.accent.warn, route: '/spatial-vision', difficulty: 'HARD', locked: false, glow: Colors.accent.warn },
-];
-
-const TRAINING_GAMES = [
-  { id: 'focus', title: 'Focus Grid', desc: 'Attention Speed.', icon: Target, color: Colors.accent.warn, route: '/focus-grid', difficulty: '3 LEVELS' },
-  { id: 'flash', title: 'Flash Match', desc: 'Visual Memory.', icon: Zap, color: Colors.accent.primaryLight, route: '/flash-match', difficulty: '3 LEVELS' },
-  { id: 'ai-quiz', title: 'Academic', desc: 'Dynamic KSSM Syllabus.', icon: Sparkles, color: Colors.accent.primaryLight, route: '/ai-quiz', difficulty: 'VARIED', locked: false, glow: Colors.accent.primary },
-  { id: 'math', title: 'Mental Math', desc: 'Number Reflexes.', icon: Blocks, color: '#38BDF8', route: '/mental-math', difficulty: 'EASY' },
-];
-
-const FloatingCard = ({ item, onPress, type = 'large' }) => {
+// ─── Core Game Card (Large Horizontal) ─────────────────────────
+const CoreCard = ({ item, onPress }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
-  const IconComponent = item.icon;
-
+  const Icon = item.icon;
   return (
-    <Animated.View style={{ transform: [{ scale: scaleAnim }], width: type === 'large' ? '100%' : (width - 56) / 2, marginBottom: 16 }}>
+    <Animated.View style={{ transform: [{ scale: scaleAnim }], marginRight: 16 }}>
       <Pressable
         onPressIn={() => Animated.spring(scaleAnim, { toValue: 0.96, useNativeDriver: true }).start()}
         onPressOut={() => Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true }).start()}
         onPress={item.locked ? null : onPress}
-        style={[
-            styles.card, 
-            type === 'mini' && styles.miniCard, 
-            item.locked && styles.lockedCard,
-            item.glow && !item.locked && { shadowColor: item.glow, shadowOpacity: 0.1, shadowRadius: 15 }
-        ]}
+        style={[styles.coreCard, { shadowColor: item.color }]}
       >
-        <View style={styles.cardHeader}>
-             <View style={[styles.diffBadge, { backgroundColor: item.locked ? 'rgba(255,255,255,0.05)' : `${item.color}15` }]}>
-                <View style={[styles.dot, { backgroundColor: item.locked ? Colors.text.secondary : item.color }]} />
-                <ThemedText style={[styles.diffText, { color: item.locked ? Colors.text.secondary : item.color }]}>{item.difficulty}</ThemedText>
-             </View>
-             {item.locked && <Lock size={12} color={Colors.text.secondary} />}
+        <LinearGradient
+          colors={[`${item.color}15`, `${item.color}05`]}
+          style={styles.coreGradient}
+          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+        >
+          <View style={[styles.coreIconBox, { backgroundColor: `${item.color}18` }]}>
+            <Icon size={28} color={item.locked ? Colors.text.muted : item.color} />
+          </View>
+          <Text style={styles.coreDiff}>{item.difficulty}</Text>
+          <Text style={[styles.coreTitle, { color: item.locked ? Colors.text.muted : Colors.text.primary }]}>
+            {item.title}
+          </Text>
+          <Text style={styles.coreDesc}>{item.locked ? 'Terkunci' : item.desc}</Text>
+          {!item.locked && (
+            <View style={[styles.coreCta, { backgroundColor: `${item.color}12` }]}>
+              <Text style={[styles.coreCtaText, { color: item.color }]}>Main sekarang</Text>
+              <ChevronRight size={12} color={item.color} />
+            </View>
+          )}
+          {item.locked && <Lock size={16} color={Colors.text.muted} style={{ marginTop: 12 }} />}
+        </LinearGradient>
+      </Pressable>
+    </Animated.View>
+  );
+};
+
+// ─── Training Game Card (Mini Square Grid) ─────────────────────
+const TrainingCard = ({ item, onPress }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const Icon = item.icon;
+  return (
+    <Animated.View style={{ transform: [{ scale: scaleAnim }], width: (width - 56) / 2 }}>
+      <Pressable
+        onPressIn={() => Animated.spring(scaleAnim, { toValue: 0.95, useNativeDriver: true }).start()}
+        onPressOut={() => Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true }).start()}
+        onPress={item.locked ? null : onPress}
+        style={[styles.trainingCard, item.locked && { opacity: 0.45 }]}
+      >
+        <View style={[styles.trainingIcon, { backgroundColor: `${item.color}12` }]}>
+          <Icon size={22} color={item.color} />
         </View>
-        
-        <View style={type === 'large' ? styles.cardContent : styles.miniContent}>
-          <View style={[styles.iconBox, { backgroundColor: item.locked ? 'rgba(255,255,255,0.03)' : `${item.color}10`, marginBottom: type === 'mini' ? 12 : 0, borderColor: item.locked ? 'transparent' : `${item.color}20` }]}>
-              <IconComponent size={type === 'large' ? 26 : 22} color={item.locked ? Colors.text.secondary : item.color} />
-          </View>
-          <View style={{ flex: 1, alignItems: type === 'mini' ? 'center' : 'flex-start' }}>
-              <ThemedText style={[styles.cardTitle, type === 'mini' && { textAlign: 'center', fontSize: 15 }]}>{item.title}</ThemedText>
-              {type === 'large' && <ThemedText style={styles.cardDesc}>{item.locked ? 'Locked' : item.desc}</ThemedText>}
-          </View>
+        <Text style={styles.trainingTitle}>{item.title}</Text>
+        <View style={[styles.trainingBadge, { backgroundColor: `${item.color}10` }]}>
+          <View style={[styles.badgeDot, { backgroundColor: item.color }]} />
+          <Text style={[styles.trainingBadgeText, { color: item.color }]}>{item.difficulty}</Text>
         </View>
       </Pressable>
     </Animated.View>
   );
 };
 
+// ─── Game Data ─────────────────────────────────────────────────
+const CORE_GAMES = [
+  {
+    id: 'color-clash', title: 'Color Clash', desc: 'Ujian Stroop Effect.', icon: Sparkles,
+    color: Colors.accent.rose, route: '/color-clash', difficulty: '3 TAHAP', locked: false,
+  },
+  {
+    id: 'logic', title: 'Logic Test', desc: 'Ujian IQ Deduktif.', icon: Brain,
+    color: Colors.accent.primary, route: '/logic-test', difficulty: 'SUSAH', locked: false,
+  },
+  {
+    id: 'spatial', title: 'Spatial Vision', desc: 'Manipulasi Ruang 3D.', icon: Eye,
+    color: Colors.accent.warn, route: '/spatial-vision', difficulty: 'SUSAH', locked: false,
+  },
+  {
+    id: 'ai-quiz', title: 'Akademik', desc: 'Silibus KSSM Dinamik.', icon: BookOpen,
+    color: Colors.accent.sky, route: '/ai-quiz', difficulty: 'PELBAGAI', locked: false,
+  },
+];
+
+const TRAINING_GAMES = [
+  { id: 'focus', title: 'Focus Grid', desc: 'Latihan Perhatian.', icon: Target, color: Colors.accent.warn, route: '/focus-grid', difficulty: '3 TAHAP' },
+  { id: 'flash', title: 'Flash Match', desc: 'Memori Visual.', icon: Gamepad2, color: Colors.accent.primary, route: '/flash-match', difficulty: '3 TAHAP' },
+  { id: 'math', title: 'Mental Math', desc: 'Refleks Nombor.', icon: Blocks, color: Colors.accent.sky, route: '/mental-math', difficulty: 'MUDAH' },
+  { id: 'rapid', title: 'Rapid Fire', desc: 'Kelajuan Reaksi.', icon: Zap, color: Colors.accent.success, route: '/rapid-fire', difficulty: 'SEDANG' },
+];
+
+// ─── Home Screen ───────────────────────────────────────────────
 export default function HomeScreen() {
   const { user } = useAuth();
   const [dailyPoints, setDailyPoints] = useState(0);
-  const [advice, setAdvice] = useState("");
+  const [advice, setAdvice] = useState('');
   const [adviceLoading, setAdviceLoading] = useState(false);
   const TARGET_POINTS = 1200;
 
   useEffect(() => {
     if (user) {
-        fetchDailyPoints();
-        fetchAdvice();
+      fetchDailyPoints();
+      fetchAdvice();
     }
   }, [user]);
 
@@ -109,33 +157,22 @@ export default function HomeScreen() {
 
   const fetchDailyPoints = async () => {
     try {
-        const q = query(collection(db, "scores"), where("userId", "==", user.uid));
-        const querySnapshot = await getDocs(q);
-        
-        let todayPoints = 0;
-        const today = new Date().toDateString();
-        
-        querySnapshot.forEach(doc => {
-            const data = doc.data();
-            if (data.createdAt) {
-                // Safely handle both Timestamp object or string
-                const createdAtDate = typeof data.createdAt.toDate === 'function' 
-                    ? data.createdAt.toDate() 
-                    : new Date(data.createdAt);
-                
-                if (createdAtDate.toDateString() === today) {
-                    if (data.gameType === "Rapid Fire") {
-                        todayPoints += 50; // Flat reward for playing rapid fire
-                    } else {
-                        todayPoints += (data.score || 0);
-                    }
-                }
-            }
-        });
-        setDailyPoints(todayPoints);
-    } catch (e) {
-        console.error("Error fetching daily points:", e);
-    }
+      const q = query(collection(db, 'scores'), where('userId', '==', user.uid));
+      const snap = await getDocs(q);
+      let total = 0;
+      const today = new Date().toDateString();
+      snap.forEach(doc => {
+        const d = doc.data();
+        if (d.createdAt) {
+          const dt = typeof d.createdAt.toDate === 'function'
+            ? d.createdAt.toDate() : new Date(d.createdAt);
+          if (dt.toDateString() === today) {
+            total += d.gameType === 'Rapid Fire' ? 50 : (d.score || 0);
+          }
+        }
+      });
+      setDailyPoints(total);
+    } catch (e) { console.error(e); }
   };
 
   const handlePress = (route) => {
@@ -143,109 +180,142 @@ export default function HomeScreen() {
     router.push(route);
   };
 
-  const isMissionComplete = dailyPoints >= TARGET_POINTS;
+  const progress = Math.min((dailyPoints / TARGET_POINTS) * 100, 100);
+  const done = dailyPoints >= TARGET_POINTS;
+  const userName = user?.displayName || user?.email?.split('@')[0] || 'Pengguna';
 
   return (
     <ThemedView safe style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+
+        {/* ── Header ── */}
         <View style={styles.header}>
-          <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-            <ThemedText title style={styles.titleText}>Cognito</ThemedText>
+          <View>
+            <Text style={styles.greeting}>Selamat datang,</Text>
+            <Text style={styles.username}>{userName} 👋</Text>
           </View>
-          <ThemedText style={styles.subtitle}>Mastery Through Cognitive Excellence</ThemedText>
+          <View style={styles.pointsBadge}>
+            <Zap size={12} color={Colors.accent.primary} />
+            <Text style={styles.pointsText}>{dailyPoints} mata</Text>
+          </View>
         </View>
 
-        <TouchableOpacity 
+        {/* ── Daily Mission Card ── */}
+        <TouchableOpacity
           activeOpacity={0.9}
-          style={styles.dailyWrapper}
-          onPress={() => {
-              fetchDailyPoints(); // Refresh points on tap
-              if (!isMissionComplete) handlePress('/logic-test');
-          }}
+          onPress={() => !done && handlePress('/logic-test')}
+          style={styles.missionWrapper}
         >
-          <LinearGradient 
-            colors={isMissionComplete ? [Colors.accent.success, '#059669'] : [Colors.accent.primary, Colors.accent.secondary]} 
-            start={{x: 0, y: 0}} end={{x: 1, y: 1}} 
-            style={styles.dailyGradient}
+          <LinearGradient
+            colors={done
+              ? ['#10B981', '#059669']
+              : ['#6366F1', '#4F46E5']}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+            style={styles.missionGradient}
           >
-             <View style={styles.dailyLeft}>
-               <View style={styles.badge}>
-                  <Sparkles size={12} color="#FFF" />
-                  <ThemedText style={styles.badgeText}>{isMissionComplete ? 'MISSION COMPLETE' : 'DAILY MISSION'}</ThemedText>
-               </View>
-               <ThemedText style={styles.dailyTitle}>Brain Workout</ThemedText>
-               <ThemedText style={styles.dailySubtitle}>{dailyPoints} / {TARGET_POINTS} Cognitive Pts</ThemedText>
-               
-               <View style={{ width: '100%', height: 6, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 3, marginTop: 12, overflow: 'hidden' }}>
-                   <View style={{ width: `${Math.min((dailyPoints/TARGET_POINTS)*100, 100)}%`, height: '100%', backgroundColor: '#FFF' }} />
-               </View>
-             </View>
-             <View style={styles.dailyIconBox}>
-                {isMissionComplete ? <CheckCircle2 size={32} color="#FFFFFF" /> : <Zap size={32} color="#FFFFFF" fill="#fff" />}
-             </View>
+            <View style={styles.missionLeft}>
+              <View style={styles.missionBadge}>
+                <Sparkles size={10} color="#FFF" />
+                <Text style={styles.missionBadgeText}>
+                  {done ? 'MISI SELESAI' : 'MISI HARIAN'}
+                </Text>
+              </View>
+              <Text style={styles.missionTitle}>Brain Workout</Text>
+              <Text style={styles.missionSub}>{dailyPoints} / {TARGET_POINTS} Mata Kognitif</Text>
+              <View style={styles.missionBarBg}>
+                <View style={[styles.missionBarFill, { width: `${progress}%` }]} />
+              </View>
+            </View>
+            <View style={styles.missionIconBox}>
+              {done ? <CheckCircle2 size={30} color="#FFF" /> : <Zap size={30} color="#FFF" fill="#FFF" />}
+            </View>
           </LinearGradient>
         </TouchableOpacity>
 
+        {/* ── Brain Fuel ── */}
         <BrainFuelCard advice={advice} onRefresh={fetchAdvice} loading={adviceLoading} />
 
-        <ThemedText style={styles.sectionHeading}>COGNITIVE CORE</ThemedText>
-        <View style={styles.grid}>
+        {/* ── Cognitive Core ── */}
+        <Text style={styles.sectionLabel}>TERAS KOGNITIF</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.coreList}
+          style={{ marginHorizontal: -20 }}
+        >
+          <View style={{ width: 20 }} />
           {CORE_GAMES.map(game => (
-            <FloatingCard key={game.id} item={game} onPress={() => handlePress(game.route)} type="large" />
+            <CoreCard key={game.id} item={game} onPress={() => handlePress(game.route)} />
           ))}
-        </View>
+          <View style={{ width: 4 }} />
+        </ScrollView>
 
-        <ThemedText style={[styles.sectionHeading, { marginTop: 20 }]}>BRAIN TRAINING</ThemedText>
-        <View style={styles.miniGrid}>
+        {/* ── Brain Training ── */}
+        <Text style={[styles.sectionLabel, { marginTop: 28 }]}>LATIHAN OTAK</Text>
+        <View style={styles.trainingGrid}>
           {TRAINING_GAMES.map(game => (
-            <FloatingCard key={game.id} item={game} onPress={() => handlePress(game.route)} type="mini" />
+            <TrainingCard key={game.id} item={game} onPress={() => handlePress(game.route)} />
           ))}
         </View>
 
-        <View style={{ height: 120 }} />
+        <View style={{ height: 110 }} />
       </ScrollView>
     </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scrollContent: { padding: 20, paddingTop: 10 },
-  header: { marginBottom: 35, paddingHorizontal: 5 },
-  titleText: { fontSize: 42, color: Colors.text.primary, letterSpacing: -2, fontWeight: '900' },
-  bugBtn: { padding: 8, backgroundColor: Colors.bg.elevated, borderRadius: 12, borderWidth: 1, borderColor: Colors.border.subtle },
-  subtitle: { color: Colors.text.secondary, fontSize: 13, fontWeight: '700', letterSpacing: 0.5, marginTop: 4, opacity: 0.8 },
-  
-  dailyWrapper: { marginBottom: 40, borderRadius: 32, overflow: 'hidden', elevation: 20, shadowColor: Colors.accent.primary, shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.3, shadowRadius: 20 },
-  dailyGradient: { padding: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  badge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.15)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14, gap: 6, marginBottom: 12, alignSelf: 'flex-start' },
-  badgeText: { fontSize: 10, fontWeight: '900', color: '#FFFFFF', letterSpacing: 1.5 },
-  dailyTitle: { fontSize: 26, fontWeight: '900', color: '#FFF', letterSpacing: -0.5 },
-  dailySubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 4, fontWeight: '600' },
-  dailyIconBox: { backgroundColor: 'rgba(255,255,255,0.15)', padding: 18, borderRadius: 24 },
+  container: { flex: 1, backgroundColor: Colors.bg.primary },
+  scroll: { paddingHorizontal: 20, paddingTop: 12 },
 
-  fuelCard: { backgroundColor: 'rgba(124, 58, 237, 0.05)', padding: 16, borderRadius: 24, marginBottom: 35, borderWidth: 1, borderColor: 'rgba(124, 58, 237, 0.1)' },
-  fuelHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  fuelTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  fuelTitle: { fontSize: 10, fontWeight: '900', color: Colors.accent.primaryLight, letterSpacing: 1.5 },
-  fuelAdvice: { fontSize: 13, color: Colors.text.primary, lineHeight: 20, fontWeight: '500', fontStyle: 'italic' },
+  // Header
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
+  greeting: { fontSize: 13, color: Colors.text.secondary, fontWeight: '600' },
+  username: { fontSize: 22, fontWeight: '900', color: Colors.text.primary, letterSpacing: -0.5, marginTop: 2 },
+  pointsBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: Colors.glow.indigo, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: `${Colors.accent.primary}20` },
+  pointsText: { fontSize: 12, fontWeight: '800', color: Colors.accent.primary },
 
-  sectionHeading: { fontSize: 11, fontWeight: '900', color: Colors.text.secondary, letterSpacing: 3, marginBottom: 20, marginLeft: 5, opacity: 0.6 },
-  
-  card: { backgroundColor: Colors.bg.card, padding: 24, borderRadius: 28, elevation: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.03)' },
-  miniCard: { width: '100%', aspectRatio: 1, justifyContent: 'space-between', padding: 20 },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 },
-  diffBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10, gap: 5 },
-  dot: { width: 4, height: 4, borderRadius: 2 },
-  diffText: { fontSize: 8, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase' },
-  cardContent: { flexDirection: 'row', alignItems: 'center' },
-  miniContent: { alignItems: 'center', flex: 1, justifyContent: 'center' },
-  iconBox: { padding: 14, borderRadius: 18, marginRight: 18, borderWidth: 1 },
-  cardTitle: { fontSize: 19, color: Colors.text.primary, fontWeight: '800', letterSpacing: -0.2 },
-  cardDesc: { fontSize: 12, color: Colors.text.secondary, marginTop: 4, lineHeight: 18 },
-  
-  grid: { gap: 16 },
-  miniGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, justifyContent: 'space-between' },
-  lockedCard: { opacity: 0.5 },
+  // Mission
+  missionWrapper: { borderRadius: 28, overflow: 'hidden', marginBottom: 20, shadowColor: '#6366F1', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.25, shadowRadius: 20, elevation: 12 },
+  missionGradient: { padding: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  missionLeft: { flex: 1 },
+  missionBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, gap: 5, marginBottom: 12, alignSelf: 'flex-start' },
+  missionBadgeText: { fontSize: 9, fontWeight: '900', color: '#FFF', letterSpacing: 1 },
+  missionTitle: { fontSize: 24, fontWeight: '900', color: '#FFF', letterSpacing: -0.5 },
+  missionSub: { fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 4, fontWeight: '600' },
+  missionBarBg: { width: '90%', height: 6, backgroundColor: 'rgba(255,255,255,0.25)', borderRadius: 3, marginTop: 14, overflow: 'hidden' },
+  missionBarFill: { height: '100%', backgroundColor: '#FFF', borderRadius: 3 },
+  missionIconBox: { backgroundColor: 'rgba(255,255,255,0.2)', padding: 16, borderRadius: 22, marginLeft: 16 },
+
+  // Brain Fuel
+  fuelCard: { backgroundColor: '#FFF', borderRadius: 24, marginBottom: 28, shadowColor: '#6366F1', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 16, elevation: 3, borderWidth: 1, borderColor: Colors.border.subtle },
+  fuelInner: { flexDirection: 'row', alignItems: 'flex-start', padding: 16, gap: 12 },
+  fuelLeft: { flex: 1, flexDirection: 'row', gap: 12 },
+  fuelIconBox: { width: 36, height: 36, borderRadius: 12, backgroundColor: Colors.glow.indigo, justifyContent: 'center', alignItems: 'center' },
+  fuelLabel: { fontSize: 9, fontWeight: '900', color: Colors.accent.primary, letterSpacing: 1.5, marginBottom: 5 },
+  fuelAdvice: { fontSize: 13, color: Colors.text.primary, lineHeight: 19, fontWeight: '500', fontStyle: 'italic' },
+  fuelRefresh: { padding: 8 },
+
+  // Section Labels
+  sectionLabel: { fontSize: 11, fontWeight: '900', color: Colors.text.muted, letterSpacing: 2.5, marginBottom: 14 },
+
+  // Core Cards (Horizontal)
+  coreList: { paddingBottom: 8, paddingTop: 4 },
+  coreCard: { width: 180, borderRadius: 28, overflow: 'hidden', backgroundColor: '#FFF', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.1, shadowRadius: 16, elevation: 6 },
+  coreGradient: { padding: 20, minHeight: 200 },
+  coreIconBox: { width: 52, height: 52, borderRadius: 18, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  coreDiff: { fontSize: 8, fontWeight: '900', color: Colors.text.muted, letterSpacing: 1.5, marginBottom: 6 },
+  coreTitle: { fontSize: 18, fontWeight: '800', letterSpacing: -0.3, marginBottom: 4 },
+  coreDesc: { fontSize: 11, color: Colors.text.secondary, lineHeight: 16, marginBottom: 14 },
+  coreCta: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10, alignSelf: 'flex-start' },
+  coreCtaText: { fontSize: 11, fontWeight: '700' },
+
+  // Training Grid
+  trainingGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
+  trainingCard: { aspectRatio: 1, backgroundColor: '#FFF', borderRadius: 24, padding: 18, justifyContent: 'space-between', shadowColor: '#6366F1', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3, borderWidth: 1, borderColor: Colors.border.subtle },
+  trainingIcon: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
+  trainingTitle: { fontSize: 15, fontWeight: '800', color: Colors.text.primary, letterSpacing: -0.2, marginTop: 10 },
+  trainingBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, alignSelf: 'flex-start' },
+  badgeDot: { width: 4, height: 4, borderRadius: 2 },
+  trainingBadgeText: { fontSize: 8, fontWeight: '900', letterSpacing: 0.8 },
 });
